@@ -14,6 +14,7 @@ import torch.onnx
 
 import utils
 from transformer_net import TransformerNet
+from transformer_net_baseops import TransformerNet_BaseOps # base ops version of TransformerNet
 from vgg import Vgg16
 
 
@@ -134,7 +135,9 @@ def stylize(args):
         output = stylize_onnx_caffe2(content_image, args)
     else:
         with torch.no_grad():
-            style_model = TransformerNet()
+            #style_model = TransformerNet()
+            style_model = TransformerNet_BaseOps(content_image) #gnsmrky, use the base ops version.
+
             state_dict = torch.load(args.model)
             # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
             for k in list(state_dict.keys()):

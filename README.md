@@ -1,3 +1,21 @@
+
+# Making fast-neural-style to run with ONNX.js
+
+Eval and export to onnx:
+```
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_candy.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_candy.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
+
+python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_mosaic.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_mosaic.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
+
+python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_rain_princess.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_rain_princess.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_256x256.onnx
+
+python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_udnie.jpg --cuda 1 --export_onnx saved_onnx/udnie_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_udnie.jpg --cuda 1 --export_onnx saved_onnx/udnie_256x256.onnx
+```
+
 # fast-neural-style :city_sunrise: :rocket:
 This repository contains a pytorch implementation of an algorithm for artistic style transfer. The algorithm can be used to mix the content of an image with the style of another image. For example, here is a photograph of a door arch rendered in the style of a stained glass painting.
 
