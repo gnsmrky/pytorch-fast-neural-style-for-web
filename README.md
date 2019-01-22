@@ -3,8 +3,8 @@
 
 Eval and export to onnx:
 ```
-python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_candy.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_candy.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_candy.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_candy.jpg --cuda 1 --export_onnx saved_onnx/candy_256x256.onnx
 
 python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_mosaic.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
 python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_mosaic.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
