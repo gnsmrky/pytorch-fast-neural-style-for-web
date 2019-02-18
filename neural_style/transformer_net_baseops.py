@@ -2,9 +2,9 @@ import torch
 
 ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRUNTIME"  # default, exports the original PyTorch FNS model
 ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS"       #          exports the model with compatible InstanceNorm() and UpSampleBy2()
-ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm() and UpSampleBy2()
+ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and padding
 
-ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_PLAIDML  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
+ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXJS  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
 def _instance_norm (target_fw):
     ins_norm = torch.nn.InstanceNorm2d
@@ -200,7 +200,7 @@ class InstanceNorm2d(torch.nn.Module):
 # base ops for instance norm with workarounds for ONNX.JS
 class InstanceNorm2d_ONNXJS(torch.nn.Module):
     def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=False):
-        super(InstanceNorm2d, self).__init__()
+        super(InstanceNorm2d_ONNXJS, self).__init__()
 
         self.num_features = num_features
         self.epsilon      = eps
