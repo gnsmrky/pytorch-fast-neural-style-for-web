@@ -16,6 +16,12 @@ python neural_style/neural_style.py eval --model saved_models/udnie.pth --conten
 python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_udnie.jpg --cuda 1 --export_onnx saved_onnx/udnie_256x256.onnx
 ```
 
+Training
+```
+python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e9 --style-image images/style-images/candy.jpg --save-model-dir saved_models/candy_nf16
+
+```
+
 # fast-neural-style :city_sunrise: :rocket:
 This repository contains a pytorch implementation of an algorithm for artistic style transfer. The algorithm can be used to mix the content of an image with the style of another image. For example, here is a photograph of a door arch rendered in the style of a stained glass painting.
 
