@@ -1,6 +1,10 @@
 
-# Making fast-neural-style to run with ONNX.js
+# PyTorch fast-neural-style example to run with ONNX.js
+A fork of PyTorch fast-neural-style example.  PyTorch has built-in onnx export that works with ONNX Runtime, but pretty much it.  This fork is to modify the example so it runs on other frameworks, such as [ONNX.js](https://github.com/Microsoft/onnxjs).
 
+Performance is not the key consideration here, but to make it runnable in web browsers with ONNX.js.  There are many workarounds needed.  This repository is to find out what it takes for the conversion process.
+
+# Eval-to-export and training
 Eval and export to onnx:
 ```
 python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_candy.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
