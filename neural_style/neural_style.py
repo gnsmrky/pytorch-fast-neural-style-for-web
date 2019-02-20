@@ -60,6 +60,7 @@ def train(args):
     features_style = vgg(utils.normalize_batch(style))
     gram_style = [utils.gram_matrix(y) for y in features_style]
 
+    #for e in range(0): # skip all the trainings.  for debugging file name purpose
     for e in range(args.epochs):
         transformer.train()
         agg_content_loss = 0.
