@@ -26,10 +26,10 @@ class TransformerNet(torch.nn.Module):
         self.deconv1 = UpsampleConvLayer(NUM_FILTERS*4, NUM_FILTERS*2, kernel_size=3, stride=1, upsample=2)
         self.in4 = torch.nn.InstanceNorm2d(NUM_FILTERS*2, affine=True)
 
-        self.deconv2 = UpsampleConvLayer(NUM_FILTERS*2, NUM_FILTERS*4, kernel_size=3, stride=1, upsample=2)
-        self.in5 = torch.nn.InstanceNorm2d(NUM_FILTERS*4, affine=True)
+        self.deconv2 = UpsampleConvLayer(NUM_FILTERS*2, NUM_FILTERS, kernel_size=3, stride=1, upsample=2)
+        self.in5 = torch.nn.InstanceNorm2d(NUM_FILTERS, affine=True)
 
-        self.deconv3 = ConvLayer(NUM_FILTERS*4, 3, kernel_size=9, stride=1)
+        self.deconv3 = ConvLayer(NUM_FILTERS, 3, kernel_size=9, stride=1)
 
         # Non-linearities
         self.relu = torch.nn.ReLU()

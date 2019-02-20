@@ -6,6 +6,9 @@ ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with co
 
 ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXJS  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
+
+NUM_FILTERS = 16 # default is 32
+
 def _instance_norm (target_fw):
     ins_norm = torch.nn.InstanceNorm2d
 
@@ -51,50 +54,35 @@ class TransformerNet_BaseOps(torch.nn.Module):
         super(TransformerNet_BaseOps, self).__init__()
 
         # Initial convolution layers
-        self.conv1 = ConvLayer(3, 32, kernel_size=9, stride=1)
-        #self.in1 = torch.nn.InstanceNorm2d(32, affine=True)
-        #self.in1 = InstanceNorm2d (32, affine=True)
-        self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(32, affine=True)
+        self.conv1 = ConvLayer(3, NUM_FILTERS, kernel_size=9, stride=1)
+        self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS, affine=True)
         
-        self.conv2 = ConvLayer(32, 64, kernel_size=3, stride=2)
-        #self.in2 = torch.nn.InstanceNorm2d(64, affine=True)
-        #self.in2 = InstanceNorm2d (64, affine=True)
-        self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(64, affine=True)
+        self.conv2 = ConvLayer(NUM_FILTERS, NUM_FILTERS*2, kernel_size=3, stride=2)
+        self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS*2, affine=True)
 
-        self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
-        #self.in3 = torch.nn.InstanceNorm2d(128, affine=True)
-        #self.in3 = InstanceNorm2d(128, affine=True)
-        self.in3 = _instance_norm(ONNX_EXPORT_TARGET)(128, affine=True)
+        self.conv3 = ConvLayer(NUM_FILTERS*2, NUM_FILTERS*4, kernel_size=3, stride=2)
+        self.in3 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS*4, affine=True)
 
         # Residual layers
-        self.res1 = ResidualBlock(128)
-        self.res2 = ResidualBlock(128)
-        self.res3 = ResidualBlock(128)
-        self.res4 = ResidualBlock(128)
-        self.res5 = ResidualBlock(128)
+        self.res1 = ResidualBlock(NUM_FILTERS*4)
+        self.res2 = ResidualBlock(NUM_FILTERS*4)
+        self.res3 = ResidualBlock(NUM_FILTERS*4)
+        self.res4 = ResidualBlock(NUM_FILTERS*4)
+        self.res5 = ResidualBlock(NUM_FILTERS*4)
         
         # Upsampling Layers
         img_h = img_in.shape[2]
         img_w = img_in.shape[3]
-        self.deconv1 = UpsampleConvLayer(img_h//4, img_w//4, 128, 64, kernel_size=3, stride=1, upsample=2)
-        #self.in4 = torch.nn.InstanceNorm2d(64, affine=True)
-        #self.in4 = InstanceNorm2d(64, affine=True)
-        self.in4 = _instance_norm(ONNX_EXPORT_TARGET)(64, affine=True)
+        self.deconv1 = UpsampleConvLayer(img_h//4, img_w//4, NUM_FILTERS*4, NUM_FILTERS*2, kernel_size=3, stride=1, upsample=2)
+        self.in4 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS*2, affine=True)
 
-        self.deconv2 = UpsampleConvLayer(img_h//2, img_w//2, 64, 32, kernel_size=3, stride=1, upsample=2)
-        #self.in5 = torch.nn.InstanceNorm2d(32, affine=True)
-        #self.in5 = InstanceNorm2d(32, affine=True)
-        self.in5 = _instance_norm(ONNX_EXPORT_TARGET)(32, affine=True)
+        self.deconv2 = UpsampleConvLayer(img_h//2, img_w//2, NUM_FILTERS*2, NUM_FILTERS, kernel_size=3, stride=1, upsample=2)
+        self.in5 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS, affine=True)
 
-        self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
+        self.deconv3 = ConvLayer(NUM_FILTERS, 3, kernel_size=9, stride=1)
 
         # Non-linearities
         self.relu = torch.nn.ReLU()
-
-        ''' test codes to dig out NaN bug when using pow() and mean() jointly.
-        self.zeroPad = torch.nn.ZeroPad2d(2)
-        self.reflectionPad = torch.nn.ReflectionPad2d(2)
-        '''
 
     def forward(self, X):
         y = self.relu(self.in1(self.conv1(X)))
@@ -108,20 +96,6 @@ class TransformerNet_BaseOps(torch.nn.Module):
         y = self.relu(self.in4(self.deconv1(y)))
         y = self.relu(self.in5(self.deconv2(y)))
         y = self.deconv3(y)
-        
-        
-        ''' test codes to dig out NaN bug when using pow() and mean() jointly.
-        #y1= self.in1(self.conv1(X))
-        #y = upsample_by_2(X,3,128,128)
-        x = X
-        num_features = 3
-
-        mu   = x.view(1,num_features,1,128*128).mean(3,keepdim=True)               # mean
-        
-        #var  = (x-mu).pow(2.0).view(1,num_features,1,-1).mean(3,keepdim=True) # variance
-        dif = x-mu
-        var  = (dif*dif).view(1,num_features,1,128*128).mean(3,keepdim=True) # variance !!!This is working!!!  pow() & mean() does not work jointly for some reason.  produces NaN values...
-        '''
 
         return y
 
@@ -130,8 +104,6 @@ class ConvLayer(torch.nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride):
         super(ConvLayer, self).__init__()
         reflection_padding = kernel_size // 2
-        #self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-        #self.reflection_pad = torch.nn.ZeroPad2d(reflection_padding)#mcky, for plaidml, which does not support 'reflect' pad
         self.reflection_pad = _padding(ONNX_EXPORT_TARGET, reflection_padding)
         self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
@@ -150,13 +122,9 @@ class ResidualBlock(torch.nn.Module):
     def __init__(self, channels):
         super(ResidualBlock, self).__init__()
         self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-        #self.in1 = torch.nn.InstanceNorm2d(channels, affine=True)
-        #self.in1 = InstanceNorm2d(channels, affine=True)
         self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(channels, affine=True)
 
         self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-        #self.in2 = torch.nn.InstanceNorm2d(channels, affine=True)
-        #self.in2 = InstanceNorm2d(channels, affine=True)
         self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(channels, affine=True)
 
         self.relu = torch.nn.ReLU()
@@ -262,8 +230,6 @@ class UpsampleConvLayer(torch.nn.Module):
         super(UpsampleConvLayer, self).__init__()
         self.upsample = upsample
         reflection_padding = kernel_size // 2
-        #self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-        #self.reflection_pad = torch.nn.ZeroPad2d(reflection_padding)#mcky, for plaidml, which does not support 'reflect' pad
         self.reflection_pad = _padding(ONNX_EXPORT_TARGET, reflection_padding)
         self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
@@ -275,7 +241,6 @@ class UpsampleConvLayer(torch.nn.Module):
     def forward(self, x):
         x_in = x
         if self.upsample:
-            #x_in = upsample_by_2(x_in, self.in_channels, self.src_h, self.src_w)
             x_in = _upsample_by_2(ONNX_EXPORT_TARGET, x_in, self.in_channels, self.src_h, self.src_w)
 
         out = self.reflection_pad(x_in)

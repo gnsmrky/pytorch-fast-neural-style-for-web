@@ -113,10 +113,18 @@ def train(args):
     # save model
     transformer.eval().cpu()
     
-    save_model_filename = "epoch_" + str(args.epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
-        args.content_weight) + "_" + str(args.style_weight) + ".model"
-    
-    save_model_filename = save_model_filename.replace(':','')#mcky, ':' cannot be part of file name on Windows
+    #save_model_filename = "epoch_" + str(args.epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
+    #    args.content_weight) + "_" + str(args.style_weight) + ".model"
+    #save_model_filename = save_model_filename.replace(':','')#gnsmrky, ':' cannot be part of file name on Windows
+
+    #gnsmrky, a simpler file name format
+    style_image_str = os.path.basename(args.style_image)
+    style_image_str = os.path.splitext(style_image_str)[0]
+    content_weight_str = np.format_float_scientific(args.content_weight).replace('.','').replace('+','')
+    style_weight_str = np.format_float_scientific(args.style_weight).replace('.','').replace('+','')
+
+    save_model_filename = style_image_str + "_" + "e" + str(args.epochs) + "_" +  content_weight_str + "_" + style_weight_str + ".model"
+    print ("save_model_filename: {}".format(save_model_filename))
 
     save_model_path = os.path.join(args.save_model_dir, save_model_filename)
     torch.save(transformer.state_dict(), save_model_path)
