@@ -20,14 +20,14 @@ As both PyTorch and ONNX.js are being updated frequently, to minimize the scope 
    - Run `download_saved_models.py` to download the pre-trained `.pth` models.  4 models will be downloaded and extracted to `saved_models` folder, `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
 
 4. Run inference eval and export the `.pth` model to `.onnx` files.  For example, to convert `mosaic.pth` to `mosaic.onnx`: 
-   - NV GPU: `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
+   - nVidia GPU: `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
    - CPU: specify `--cuda 0` in the above python command line.
    - The exported `.onnx` model file is saved in `saved_onnx` folder.
 
 The generated `.onnx` file can then be inferenced by ONNX.js in supported web browsers.
 
 ## System and web browser resource considerations
-When running inference eval on a resource limited systems, such as CPU + 8GB of RAM, the eval may result in seg fault.  This is mainly due to insufficient memory.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
+When running inference eval on a resource limited systems, such as CPU + 8GB of RAM or GPU + 2GB VRAM, the eval may result in seg fault.  This is mainly due to insufficient memory.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
 
 In the above inference eval, `amber.jpg` is an image of 1080x1080.  `--content-scale 2` would resize down the image to 540x540.
 ```
