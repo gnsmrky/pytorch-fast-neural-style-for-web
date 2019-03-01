@@ -31,7 +31,8 @@ When running inference eval on a resource limited systems, such as CPU + 8GB of 
 
 In the above inference eval, `amber.jpg` is an image of 1080x1080.  `--content-scale 2` would resize down the image to 540x540.
 ```
-python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --content-scale 2 --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1
+python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg \
+                                        --content-scale 2 --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1
 ```
 
 (Reduced content size does not result in reduced `.onnx` model file sizes.  It simply reduces the amount of resources needed for the needed inferencing eval run.  In the exported `.onnx` model files, only the sizes for input and output nodes are changed.)
