@@ -11,22 +11,24 @@ As both PyTorch and ONNX.js are being updated frequently, to minimize the scope 
 
 ## Setup and convert pre-trained PyTorch model files (.pth)
 
-1. Setup PyTorch - [PyTorch get started](https://pytorch.org/get-started/locally/)
-   - This includes setting up CUDA if necessary.
-2. Setup ONNX.
+1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/):
+   - Set up CUDA if necessary.
+   - This repo is based on PyTorch `pip` installation.
+2. Setup ONNX:
+   - `pip install onnx`
    - [ONNX](https://github.com/onnx/onnx) GitHub repository.
-3. Clone this repository, download the pre-trained models.
+3. Clone this repository:
    - `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
-   - Run `download_saved_models.py` to download the pre-trained `.pth` models.  
-   4 models will be downloaded and extracted to `saved_models` folder: `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
-
-4. Run inference eval and export the `.pth` model to `.onnx` files.  For example, to convert/export `mosaic.pth` to `mosaic.onnx`: 
-   - nVidia GPU:  
+4. Download the pre-trained models:
+   - In this repo, run `download_saved_models.py` to download the 4 pre-trained `.pth` model files and extract to `saved_models` folder:  
+   `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
+5. Run inference eval and export the `.pth` model to `.onnx` files:  
+   - For example, to convert/export `mosaic.pth` to `mosaic.onnx` with nVidia GPU:  
    `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
-   - CPU: specify `--cuda 0` in the above python command line.
-   - The exported `.onnx` model file is saved in `saved_onnx` folder.
+   - With CPU: specify `--cuda 0` in the above python command line.
+   - The exported `mosaic.onnx` model file is saved in `saved_onnx` folder.
 
-The generated `.onnx` file can then be inferenced by ONNX.js in supported web browsers.
+The generated `mosaic.onnx` model file in `saved_onnx` folder can then be inferenced by ONNX.js in supported web browsers.
 
 ## System and web browser resource considerations
 When running inference eval on a resource limited systems, such as CPU + 8GB of RAM or GPU + 2GB VRAM, the eval may result in **`Segmentation fault (core dumped)`** error.  This is mainly due to insufficient memory when doing inference run.  PyTorch needs to run inference to build model graph.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
@@ -40,14 +42,14 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
 ## Eval-to-export to smaller sizes
-When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the resolution even futher, to 128x128 and 256x256.
+When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the content image size even futher to 128x128 and 256x256 using `--content-scale` option.
 
-Content image `amber.jpg` has resolution of 1080x1080:
-   - For target output size of 128x128, use `--content-scale 8.4375` (1080 / 128 = 8.4375)
-   - For target output size of 256x256, use `--content-scale 4.21875`(1080 / 256 = 4.21875)
+Content image `amber.jpg` has resolution of 1080x1080:  
+- For target output size at 128x128, use `--content-scale 8.4375` (1080 / 128 = 8.4375)  
+- For target output size at 256x256, use `--content-scale 4.21875`(1080 / 256 = 4.21875)
 
 
-Eval and export `candy.pth` --> `candy_128x128.onnx` and `candy_256x256.onnx` in `saved_onnx` folder.
+To eval and export `candy.pth` --> `candy_128x128.onnx` and `candy_256x256.onnx` in `saved_onnx` folder.
 ```
 python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg \
            --content-scale 8.4375 --output-image amber_candy_128.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
@@ -65,30 +67,29 @@ With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/
 - Default ONNX opset level exported by PyTorch is `v9`, while ONNX.js is `v7`.
 - 2 ops are missing in ONNX.js, `InstanceNorm` and `Upsample` ops.  
 _Update: Posted the "`InstanceNorm` missing" issue [here](https://github.com/Microsoft/onnxjs/issues/18)_.  
-_Update: `InstanceNorm` is now supported using `cpu` and `wasm` as of feb 15, 2019 with this [merged ommit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590)_.
-- Combined with few other incompatibilities between PyTorch and ONNX.js.
+_Update: `InstanceNorm` is now supported in `master` branch by `cpu` and `wasm` backends (as of feb 15, 2019) with this [merged ommit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590)_.
 
-It is frustrating for a deep learning beginner to go through various frameworks, model formats, model conversions, and developing and deploying a deep learning application.  Usually a deep learning framework comes with various examples.  Running such examples within the accompanied framework is usually ok.  Running examples in another framework, however, requires model conversion and the knowledge about the target framework.
+It is frustrating for a deep learning beginner to go through various frameworks, model formats, model conversions, and developing and deploying a deep learning application.  Usually a deep learning framework comes with various examples.  Running such examples within the accompanied framework is usually ok.  Running examples **_in a different target framework_**, however, requires model conversion and the knowledge about source and target framework.
 
 One major technique is to minimize the changes in both PyTorch (source framework) and ONNX.js (target framework) as both frameworks are being updated frequently.  This is true particularly for ONNX.js as it is still in heavy development cycles.  
 
-Thus, the following technicques were used:  
-1. The only change for PyTorch is to change the default export opset level from 9 to 7.
+Thus, the following techniques were used:  
+1. Avoid changes to ONNX.js.
+2. The only change for PyTorch is to change the default export opset level from 9 to 7.
    - In python environment, find the file `symbolic.py` for ONNX.  Search `_onnx_opset_version` within this file, change the number from `9` to `7`.  
    Change `_onnx_opset_version = 9` to `_onnx_opset_version = 7`
    - For example, in python 3.6 virtualenv for `pip` installed PyTorch (`pip install torch`), `symbolic.py` is usually located at:  
    `./lib/python3.6/site-packages/torch/onnx/symbolic.py`
    - Link to GitHub [PyTorch v1.0 onnx/symbolic.py#164](v1.0.0/torch/onnx/symbolic.py#L164)  
    
-2. Break down the un-supported `InstanceNorm` and `Upsample` ops to basic ops _only for inference eval_
+3. Break down the un-supported `InstanceNorm` and `Upsample` ops to basic ops _only for inference eval_
    - The re-written model for inference eval is in `transformer_net_baseops.py`
    - Rewrite using the basic ops and make sure the ops run correctly in ONNX.js.  
       - `InstanceNorm2d_ONNXJS()` class replaces `InstanceNorm2d()` class  
       - `_upsample_by_2()` replaces `interpolate()` in `UpsampleConvLayer` class.
    - Optimize the re-written ops so the performance is optimal in ONNX.js.  (Involves repeative tries with different basic ops and benchmark in ONNX.js.)
-3. Make sure the pre-trained PyTorch weights and models (.pth files) can still be used.
+4. Make sure the pre-trained PyTorch weights and models (.pth files) can still be used.
    * _So no re-training is needed!_
-4. Avoid changes to ONNX.js.
 
 ## Even smaller model sizes
 Training
