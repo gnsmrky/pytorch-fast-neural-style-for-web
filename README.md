@@ -1,72 +1,96 @@
 
-# PyTorch fast-neural-style example to run with ONNX.js in web browsers
-A fork of PyTorch fast-neural-style example.  PyTorch has built-in onnx export that works with ONNX Runtime, but that's pretty much it.  This fork is to modify the example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsrs.
+# Run PyTorch fast-neural-style example with ONNX.js in web browsers
+A fork of PyTorch [fast-neural-style (FNS) example](https://github.com/pytorch/examples/tree/master/fast_neural_style).  The example has built-in onnx export that works with ONNX Runtime, but that's pretty much it.  This fork is to modify the example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsrs.
 
-Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  There are many workarounds needed.  This repository is to find out what it takes to make the model conversion a successful one.
+Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  Many workarounds are needed.  This repository is to find out what it takes to make the model conversion a successful one.
 
-It follows the following process:
-PyTorch (source framework) --> PyTorch model (.pth or .model) --> ONNX models --> ONNX.js (target framework)
+It follows the following process:  
+<p align="center"><b>PyTorch FNS example --> PyTorch model files (.pth) --> ONNX model files --> ONNX.js on web browsers</b></p>
 
-As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, most changes happens in fast-neural-style example only.  The network model is updated to make it runnable in ONNX.js.
+As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in fast-neural-style example only_.
 
-## Setup and convert pre-train model files
+## Setup and convert pre-trained PyTorch model files (.pth)
 
 1. Setup PyTorch - [PyTorch get started](https://pytorch.org/get-started/locally/)
-   - This includes setting up CUDA
+   - This includes setting up CUDA if necessary.
 2. Setup ONNX.
-   - [ONNX](https://github.com/onnx/onnx) repository.
+   - [ONNX](https://github.com/onnx/onnx) GitHub repository.
 3. Clone this repository, download the pre-trained models.
    - `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
-   - Run `download_saved_models.py` to download the pre-trained `.pth` models.  4 models will be downloaded and extracted to `saved_models` folder, `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
+   - Run `download_saved_models.py` to download the pre-trained `.pth` models.  
+   4 models will be downloaded and extracted to `saved_models` folder: `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
 
-4. Run inference eval and export the `.pth` model to `.onnx` files.  For example, to convert `mosaic.pth` to `mosaic.onnx`: 
-   - nVidia GPU: `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
+4. Run inference eval and export the `.pth` model to `.onnx` files.  For example, to convert/export `mosaic.pth` to `mosaic.onnx`: 
+   - nVidia GPU:  
+   `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
    - CPU: specify `--cuda 0` in the above python command line.
    - The exported `.onnx` model file is saved in `saved_onnx` folder.
 
 The generated `.onnx` file can then be inferenced by ONNX.js in supported web browsers.
 
 ## System and web browser resource considerations
-When running inference eval on a resource limited systems, such as CPU + 8GB of RAM or GPU + 2GB VRAM, the eval may result in seg fault.  This is mainly due to insufficient memory.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
+When running inference eval on a resource limited systems, such as CPU + 8GB of RAM or GPU + 2GB VRAM, the eval may result in **`Segmentation fault (core dumped)`** error.  This is mainly due to insufficient memory when doing inference run.  PyTorch needs to run inference to build model graph.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
 
-In the above inference eval, `amber.jpg` is an image of 1080x1080.  `--content-scale 2` would resize down the image to 540x540.
+In the above inference eval, `amber.jpg` is an image of size 1080x1080.  `--content-scale 2` would scale down the image size to 540x540.  
 ```
 python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg \
                                         --content-scale 2 --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1
 ```
 
-(Reduced content size does not result in reduced `.onnx` model file sizes.  It simply reduces the amount of resources needed for the needed inferencing eval run.  In the exported `.onnx` model files, only the sizes for input and output nodes are changed.)
+(Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
-## Eval-to-export in different sizes
-If using `amber.jpg`, which has resolution 1080x1080:
+## Eval-to-export to smaller sizes
+When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the resolution even futher, to 128x128 and 256x256.
+
+Content image `amber.jpg` has resolution of 1080x1080:
    - For target output size of 128x128, use `--content-scale 8.4375` (1080 / 128 = 8.4375)
    - For target output size of 256x256, use `--content-scale 4.21875`(1080 / 256 = 4.21875)
 
 
-Eval and export `candy.pth` --> `candy_128x128.onnx` and `candy_256x256.onnx`
+Eval and export `candy.pth` --> `candy_128x128.onnx` and `candy_256x256.onnx` in `saved_onnx` folder.
 ```
-python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_candy_128.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image amber_candy_256.jpg --cuda 1 --export_onnx saved_onnx/candy_256x256.onnx
-```
-
-Eval and export `mosaic.pth` --> `mosaic_128x128.onnx` and `mosaic_256x256.onnx`
-```
-python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_mosaic_128.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image ambermosaic_256.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg \
+           --content-scale 8.4375 --output-image amber_candy_128.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg \
+           --content-scale 4.21875 --output-image amber_candy_256.jpg --cuda 1 --export_onnx saved_onnx/candy_256x256.onnx
 ```
 
-Eval and export `rain_princess.pth` --> `rain_princess_128x128.onnx` and `rain_princess_256x256.onnx`
-```
-python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_rain_princess_128.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image amber_rain_princess_256.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_256x256.onnx
-```
+Same for the rest of pre-traine `.pth` model files.  
+- `mosaic.pth` --> `mosaic_128x128.onnx` and - `mosaic_256x256.onnx`  
+- `rain_princess.pth` --> `rain_princess_128x128.onnx` and `rain_princess_256x256.onnx`  
+- `udnie.pth` --> `udnie_128x128.onnx` and `udnie_256x256.onnx`
 
-Eval and export `udnie.pth` --> `udnie_128x128.onnx` and `udnie_256x256.onnx`
-```
-python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_udnie_128.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image amber_udnie_256.jpg --cuda 1 --export_onnx saved_onnx/udnie_256x256.onnx
-```
+## The problems and what it takes to make it work.
+With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3), there are 2 major problems:
+- Default ONNX opset level exported by PyTorch is `v9`, while ONNX.js is `v7`.
+- 2 ops are missing in ONNX.js, `InstanceNorm` and `Upsample` ops.  
+_Update: Posted the "`InstanceNorm` missing" issue [here](https://github.com/Microsoft/onnxjs/issues/18)_.  
+_Update: `InstanceNorm` is now supported using `cpu` and `wasm` as of feb 15, 2019 with this [merged ommit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590)_.
+- Combined with few other incompatibilities between PyTorch and ONNX.js.
 
+It is frustrating for a deep learning beginner to go through various frameworks, model formats, model conversions, and developing and deploying a deep learning application.  Usually a deep learning framework comes with various examples.  Running such examples within the accompanied framework is usually ok.  Running examples in another framework, however, requires model conversion and the knowledge about the target framework.
+
+One major technique is to minimize the changes in both PyTorch (source framework) and ONNX.js (target framework) as both frameworks are being updated frequently.  This is true particularly for ONNX.js as it is still in heavy development cycles.  
+
+Thus, the following technicques were used:  
+1. The only change for PyTorch is to change the default export opset level from 9 to 7.
+   - In python environment, find the file `symbolic.py` for ONNX.  Search `_onnx_opset_version` within this file, change the number from `9` to `7`.  
+   Change `_onnx_opset_version = 9` to `_onnx_opset_version = 7`
+   - For example, in python 3.6 virtualenv for `pip` installed PyTorch (`pip install torch`), `symbolic.py` is usually located at:  
+   `./lib/python3.6/site-packages/torch/onnx/symbolic.py`
+   - Link to GitHub [PyTorch v1.0 onnx/symbolic.py#164](v1.0.0/torch/onnx/symbolic.py#L164)  
+   
+2. Break down the un-supported `InstanceNorm` and `Upsample` ops to basic ops _only for inference eval_
+   - The re-written model for inference eval is in `transformer_net_baseops.py`
+   - Rewrite using the basic ops and make sure the ops run correctly in ONNX.js.  
+      - `InstanceNorm2d_ONNXJS()` class replaces `InstanceNorm2d()` class  
+      - `_upsample_by_2()` replaces `interpolate()` in `UpsampleConvLayer` class.
+   - Optimize the re-written ops so the performance is optimal in ONNX.js.  (Involves repeative tries with different basic ops and benchmark in ONNX.js.)
+3. Make sure the pre-trained PyTorch weights and models (.pth files) can still be used.
+   * _So no re-training is needed!_
+4. Avoid changes to ONNX.js.
+
+## Even smaller model sizes
 Training
 ```
 python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e09 --save-model-dir saved_models --style-image images/style-images/candy.jpg
@@ -76,6 +100,9 @@ python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --
 python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models --style-image images/style-images/mosaic.jpg
 
 ```
+
+----------
+##### Below from original repo of PyTorch fast-nueral-style
 
 # fast-neural-style :city_sunrise: :rocket:
 This repository contains a pytorch implementation of an algorithm for artistic style transfer. The algorithm can be used to mix the content of an image with the style of another image. For example, here is a photograph of a door arch rendered in the style of a stained glass painting.
