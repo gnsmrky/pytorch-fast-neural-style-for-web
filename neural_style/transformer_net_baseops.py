@@ -7,7 +7,7 @@ ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with co
 ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXJS  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
 
-NUM_FILTERS = 16 # default is 32
+#NUM_CHANNELS = 16 # default is 32
 
 def _instance_norm (target_fw):
     ins_norm = torch.nn.InstanceNorm2d
@@ -50,36 +50,36 @@ def _upsample_by_2 (target_fw, x, c, h, w):
     return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=self.upsample)
 
 class TransformerNet_BaseOps(torch.nn.Module):
-    def __init__(self, img_in):
+    def __init__(self, img_in, num_channels=32):
         super(TransformerNet_BaseOps, self).__init__()
 
         # Initial convolution layers
-        self.conv1 = ConvLayer(3, NUM_FILTERS, kernel_size=9, stride=1)
-        self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS, affine=True)
+        self.conv1 = ConvLayer(3, num_channels, kernel_size=9, stride=1)
+        self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels, affine=True)
         
-        self.conv2 = ConvLayer(NUM_FILTERS, NUM_FILTERS*2, kernel_size=3, stride=2)
-        self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS*2, affine=True)
+        self.conv2 = ConvLayer(num_channels, num_channels*2, kernel_size=3, stride=2)
+        self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels*2, affine=True)
 
-        self.conv3 = ConvLayer(NUM_FILTERS*2, NUM_FILTERS*4, kernel_size=3, stride=2)
-        self.in3 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS*4, affine=True)
+        self.conv3 = ConvLayer(num_channels*2, num_channels*4, kernel_size=3, stride=2)
+        self.in3 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels*4, affine=True)
 
         # Residual layers
-        self.res1 = ResidualBlock(NUM_FILTERS*4)
-        self.res2 = ResidualBlock(NUM_FILTERS*4)
-        self.res3 = ResidualBlock(NUM_FILTERS*4)
-        self.res4 = ResidualBlock(NUM_FILTERS*4)
-        self.res5 = ResidualBlock(NUM_FILTERS*4)
+        self.res1 = ResidualBlock(num_channels*4)
+        self.res2 = ResidualBlock(num_channels*4)
+        self.res3 = ResidualBlock(num_channels*4)
+        self.res4 = ResidualBlock(num_channels*4)
+        self.res5 = ResidualBlock(num_channels*4)
         
         # Upsampling Layers
         img_h = img_in.shape[2]
         img_w = img_in.shape[3]
-        self.deconv1 = UpsampleConvLayer(img_h//4, img_w//4, NUM_FILTERS*4, NUM_FILTERS*2, kernel_size=3, stride=1, upsample=2)
-        self.in4 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS*2, affine=True)
+        self.deconv1 = UpsampleConvLayer(img_h//4, img_w//4, num_channels*4, num_channels*2, kernel_size=3, stride=1, upsample=2)
+        self.in4 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels*2, affine=True)
 
-        self.deconv2 = UpsampleConvLayer(img_h//2, img_w//2, NUM_FILTERS*2, NUM_FILTERS, kernel_size=3, stride=1, upsample=2)
-        self.in5 = _instance_norm(ONNX_EXPORT_TARGET)(NUM_FILTERS, affine=True)
+        self.deconv2 = UpsampleConvLayer(img_h//2, img_w//2, num_channels*2, num_channels, kernel_size=3, stride=1, upsample=2)
+        self.in5 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels, affine=True)
 
-        self.deconv3 = ConvLayer(NUM_FILTERS, 3, kernel_size=9, stride=1)
+        self.deconv3 = ConvLayer(num_channels, 3, kernel_size=9, stride=1)
 
         # Non-linearities
         self.relu = torch.nn.ReLU()

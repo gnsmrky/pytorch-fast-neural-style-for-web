@@ -44,7 +44,7 @@ def train(args):
     train_dataset = datasets.ImageFolder(args.dataset, transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
 
-    transformer = TransformerNet().to(device)
+    transformer = TransformerNet(num_channels=args.num_channels).to(device)
     optimizer = Adam(transformer.parameters(), args.lr)
     mse_loss = torch.nn.MSELoss()
 
@@ -60,8 +60,8 @@ def train(args):
     features_style = vgg(utils.normalize_batch(style))
     gram_style = [utils.gram_matrix(y) for y in features_style]
 
-    #for e in range(0): # skip all the trainings.  for debugging file name purpose
-    for e in range(args.epochs):
+    for e in range(0): # skip all the trainings.  for debugging file name purpose
+    #for e in range(args.epochs):
         transformer.train()
         agg_content_loss = 0.
         agg_style_loss = 0.
@@ -118,13 +118,14 @@ def train(args):
     #    args.content_weight) + "_" + str(args.style_weight) + ".model"
     #save_model_filename = save_model_filename.replace(':','')#gnsmrky, ':' cannot be part of file name on Windows
 
-    #gnsmrky, a simpler file name format
+    #gnsmrky, a simpler file name format.  file name = [style file name]_nc[num_channels]_b[batch_size]_e[epochs]_[content_weight]_[style_weight]
     style_image_str = os.path.basename(args.style_image)
     style_image_str = os.path.splitext(style_image_str)[0]
     content_weight_str = np.format_float_scientific(args.content_weight).replace('.','').replace('+','')
     style_weight_str = np.format_float_scientific(args.style_weight).replace('.','').replace('+','')
 
-    save_model_filename = style_image_str + "_" + "e" + str(args.epochs) + "_" +  content_weight_str + "_" + style_weight_str + ".model"
+    save_model_filename  = style_image_str + "_nc" + str(args.num_channels) + "_b" + str(args.batch_size) + "_e" + str(args.epochs)
+    save_model_filename += "_" +  content_weight_str + "_" + style_weight_str + ".model"
     print ("save_model_filename: {}".format(save_model_filename))
 
     save_model_path = os.path.join(args.save_model_dir, save_model_filename)
@@ -149,7 +150,7 @@ def stylize(args):
     else:
         with torch.no_grad():
             #style_model = TransformerNet()
-            style_model = TransformerNet_BaseOps(content_image) #gnsmrky, use the base ops version.
+            style_model = TransformerNet_BaseOps(content_image, args.num_channels) #gnsmrky, use the base ops version.
 
             state_dict = torch.load(args.model)
             # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
@@ -235,6 +236,13 @@ def main():
                                  help="set it to 1 for running on GPU, 0 for CPU")
     eval_arg_parser.add_argument("--export_onnx", type=str,
                                  help="export ONNX model to a given file")
+
+    # more options
+    train_arg_parser.add_argument("--num-channels", type=int, default=32,
+                                 help="number of base channels, default is 32.  lower number for lower resource platforms and faster inference time. (i.e. web)")
+
+    eval_arg_parser.add_argument("--num-channels", type=int, default=32,
+                                 help="number of base channels, default is 32.  lower number for lower resource platforms and faster inference time. (i.e. web)")
 
     args = main_arg_parser.parse_args()
 
