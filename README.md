@@ -1,23 +1,69 @@
 
-# PyTorch fast-neural-style example to run with ONNX.js
-A fork of PyTorch fast-neural-style example.  PyTorch has built-in onnx export that works with ONNX Runtime, but pretty much it.  This fork is to modify the example so it runs on other frameworks, such as [ONNX.js](https://github.com/Microsoft/onnxjs).
+# PyTorch fast-neural-style example to run with ONNX.js in web browsers
+A fork of PyTorch fast-neural-style example.  PyTorch has built-in onnx export that works with ONNX Runtime, but that's pretty much it.  This fork is to modify the example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsrs.
 
-Performance is not the key consideration here, but to make it runnable in web browsers with ONNX.js.  There are many workarounds needed.  This repository is to find out what it takes for the conversion process.
+Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  There are many workarounds needed.  This repository is to find out what it takes to make the model conversion a successful one.
 
-# Eval-to-export and training
-Eval and export to onnx:
+It follows the following process:
+PyTorch (source framework) --> PyTorch model (.pth or .model) --> ONNX models --> ONNX.js (target framework)
+
+As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, most changes happens in fast-neural-style example only.  The network model is updated to make it runnable in ONNX.js.
+
+## Setup and convert pre-train model files
+
+1. Setup PyTorch - [PyTorch get started](https://pytorch.org/get-started/locally/)
+   - This includes setting up CUDA
+2. Setup ONNX.
+   - [ONNX](https://github.com/onnx/onnx) repository.
+3. Clone this repository, download the pre-trained models.
+   - `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
+   - Run `download_saved_models.py` to download the pre-trained `.pth` models.  4 models will be downloaded and extracted to `saved_models` folder, `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
+
+4. Run inference eval and export the `.pth` model to `.onnx` files.  For example, to convert `mosaic.pth` to `mosaic.onnx`: 
+   - NV GPU: `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
+   - CPU: specify `--cuda 0` in the above python command line.
+   - The exported `.onnx` model file is saved in `saved_onnx` folder.
+
+The generated `.onnx` file can then be inferenced by ONNX.js in supported web browsers.
+
+## System and web browser resource considerations
+When running inference eval on a resource limited systems, such as CPU + 8GB of RAM, the eval may result in seg fault.  This is mainly due to insufficient memory.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
+
+In the above inference eval, `amber.jpg` is an image of 1080x1080.  `--content-scale 2` would resize down the image to 540x540.
 ```
-python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_candy.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_candy.jpg --cuda 1 --export_onnx saved_onnx/candy_256x256.onnx
+python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --content-scale 2 --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1
+```
 
-python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_mosaic.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_mosaic.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
+(Reduced content size does not result in reduced `.onnx` model file sizes.  It simply reduces the amount of resources needed for the needed inferencing eval run.  In the exported `.onnx` model files, only the sizes for input and output nodes are changed.)
 
-python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_rain_princess.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_rain_princess.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_256x256.onnx
+## Eval-to-export in different sizes
+If using `amber.jpg`, which has resolution 1080x1080:
+   - For target output size of 128x128, use `--content-scale 8.4375` (1080 / 128 = 8.4375)
+   - For target output size of 256x256, use `--content-scale 4.21875`(1080 / 256 = 4.21875)
 
-python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber_128x128.jpg --output-image amber_128x128_udnie.jpg --cuda 1 --export_onnx saved_onnx/udnie_128x128.onnx
-python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber_256x256.jpg --output-image amber_256x256_udnie.jpg --cuda 1 --export_onnx saved_onnx/udnie_256x256.onnx
+
+Eval and export `candy.pth` --> `candy_128x128.onnx` and `candy_256x256.onnx`
+```
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_candy_128.jpg --cuda 1 --export_onnx saved_onnx/candy_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/candy.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image amber_candy_256.jpg --cuda 1 --export_onnx saved_onnx/candy_256x256.onnx
+```
+
+Eval and export `mosaic.pth` --> `mosaic_128x128.onnx` and `mosaic_256x256.onnx`
+```
+python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_mosaic_128.jpg --cuda 1 --export_onnx saved_onnx/mosaic_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image ambermosaic_256.jpg --cuda 1 --export_onnx saved_onnx/mosaic_256x256.onnx
+```
+
+Eval and export `rain_princess.pth` --> `rain_princess_128x128.onnx` and `rain_princess_256x256.onnx`
+```
+python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_rain_princess_128.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/rain_princess.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image amber_rain_princess_256.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_256x256.onnx
+```
+
+Eval and export `udnie.pth` --> `udnie_128x128.onnx` and `udnie_256x256.onnx`
+```
+python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber.jpg --content-scale 8.4375 --output-image amber_udnie_128.jpg --cuda 1 --export_onnx saved_onnx/rain_princess_128x128.onnx
+python neural_style/neural_style.py eval --model saved_models/udnie.pth --content-image images/content-images/amber.jpg --content-scale 4.21875 --output-image amber_udnie_256.jpg --cuda 1 --export_onnx saved_onnx/udnie_256x256.onnx
 ```
 
 Training
