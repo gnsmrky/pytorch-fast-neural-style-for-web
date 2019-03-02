@@ -1,4 +1,3 @@
-
 # Run PyTorch fast-neural-style example with ONNX.js in web browsers
 A fork of PyTorch [fast-neural-style (FNS) example](https://github.com/pytorch/examples/tree/master/fast_neural_style).  The example has built-in onnx export that works with [ONNX Runtime](https://github.com/Microsoft/onnxruntime), but that's about it.  This fork is to modify the example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsers.
 
@@ -9,18 +8,27 @@ It follows the following process:
 
 As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in fast-neural-style example only_.
 
-## Setup and convert pre-trained PyTorch model files (.pth)
+This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3) running on Windows 10 or Ubuntu 18.04.
 
-1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/):
+See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in docs if you are interested in technical details.
+
+## Setup and convert pre-trained PyTorch fast-neural-style model files (.pth) to ONNX (.onnx)
+
+1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
    - Set up CUDA if necessary.
-   - This repo is based on PyTorch `pip` installation.
+   - This repo is based on PyTorch v1.0 `pip` installation with Python 3.6 and CUDA 10.0 on Windows 10:  
+   ```
+   pip3 install https://download.pytorch.org/whl/cu100/torch-1.0.1-cp36-cp36m-win_amd64.whl
+   pip3 install torchvision
+   ```
+
 2. Setup ONNX:
    - `pip install onnx`
    - [ONNX](https://github.com/onnx/onnx) GitHub repository.
 3. Clone this repository:
    - `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
 4. Download the pre-trained models:
-   - In this repo, run `download_saved_models.py` to download the 4 pre-trained `.pth` model files and extract to `saved_models` folder:  
+   - In this repo, run `download_saved_models.py` to download the 4 pre-trained `.pth` model files.  The model files will be extracted to `saved_models` folder:  
    `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
 5. Run inference eval and export the `.pth` model to `.onnx` files:  
    - For example, to convert/export `mosaic.pth` to `mosaic.onnx` with nVidia GPU:  
@@ -41,7 +49,10 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
-## Eval-to-export to smaller sizes
+## Run fast-neural-style with ONNX.js
+Goto [ONNX.js fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the resource situation.
+
+### Eval-to-export to smaller sizes for web inference
 When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the content image size even futher to 128x128 and 256x256 using `--content-scale` option.
 
 Content image `amber.jpg` has resolution of 1080x1080:  
@@ -62,46 +73,7 @@ Same for the rest of pre-traine `.pth` model files.
 - `rain_princess.pth` --> `rain_princess_128x128.onnx` and `rain_princess_256x256.onnx`  
 - `udnie.pth` --> `udnie_128x128.onnx` and `udnie_256x256.onnx`
 
-## The problems and what it takes to make it work.
-With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3), there are 2 major problems:
-- Default ONNX opset level exported by PyTorch is `v9`, while ONNX.js is `v7`.
-- 2 ops are missing in ONNX.js, `InstanceNorm` and `Upsample` ops.  
-_Update: Posted the "`InstanceNorm` missing" issue [here](https://github.com/Microsoft/onnxjs/issues/18)_.  
-_Update: `InstanceNorm` is now supported in `master` branch by `cpu` and `wasm` backends (as of feb 15, 2019) with this [merged ommit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590)_.
-
-It is frustrating for a deep learning beginner to go through various frameworks, model formats, model conversions, and developing and deploying a deep learning application.  Usually a deep learning framework comes with various examples.  Running such examples within the accompanied framework is usually ok.  Running examples **_in a different target framework_**, however, requires model conversion and the knowledge about source and target framework.
-
-One major technique is to minimize the changes in both PyTorch (source framework) and ONNX.js (target framework) as both frameworks are being updated frequently.  This is true particularly for ONNX.js as it is still in heavy development cycles.  
-
-Thus, the following techniques were used:  
-1. Avoid changes to ONNX.js.
-2. The only change for PyTorch is to change the default export opset level from 9 to 7.
-   - In python environment, find the file `symbolic.py` for ONNX.  Search `_onnx_opset_version` within this file, change the number from `9` to `7`.  
-   Change `_onnx_opset_version = 9` to `_onnx_opset_version = 7`
-   - For example, in python 3.6 virtualenv for `pip` installed PyTorch (`pip install torch`), `symbolic.py` is usually located at:  
-   `./lib/python3.6/site-packages/torch/onnx/symbolic.py`
-   - Link to GitHub [PyTorch v1.0 onnx/symbolic.py#164](v1.0.0/torch/onnx/symbolic.py#L164)  
-   
-3. Break down the un-supported `InstanceNorm` and `Upsample` ops to basic ops _only for inference eval_
-   - The re-written model for inference eval is in `transformer_net_baseops.py`
-   - Rewrite using the basic ops and make sure the ops run correctly in ONNX.js.  
-      - `InstanceNorm2d_ONNXJS()` class replaces `InstanceNorm2d()` class  
-      - `_upsample_by_2()` replaces `interpolate()` in `UpsampleConvLayer` class.
-   - Optimize the re-written ops so the performance is optimal in ONNX.js.  (Involves repeative tries with different basic ops and benchmark in ONNX.js.)
-4. Make sure the pre-trained PyTorch weights and models (.pth files) can still be used.
-   * _So no re-training is needed!_
-
-## Even smaller model sizes
-Training
-```
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e09 --save-model-dir saved_models --style-image images/style-images/candy.jpg
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models --style-image images/style-images/candy.jpg
-
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e09 --save-model-dir saved_models --style-image images/style-images/mosaic.jpg
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models --style-image images/style-images/mosaic.jpg
-
-```
-
+----------
 ----------
 ##### Below from original repo of PyTorch fast-nueral-style
 
