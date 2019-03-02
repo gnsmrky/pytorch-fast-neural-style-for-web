@@ -1,18 +1,20 @@
-# Run PyTorch fast-neural-style example with ONNX.js in web browsers
+# Run PyTorch fast-neural-style (FNS) example with ONNX.js in web browsers
 A fork of PyTorch [fast-neural-style (FNS) example](https://github.com/pytorch/examples/tree/master/fast_neural_style).  The example has built-in onnx export that works with [ONNX Runtime](https://github.com/Microsoft/onnxruntime), but that's about it.  This fork is to modify the example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsers.
 
 Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  Many workarounds are needed.  This repository is to find out what it takes to make the model conversion a successful one.
 
-It follows the following process:  
+It follows the process:  
 <p align="center"><b>PyTorch FNS example --> PyTorch model files (.pth) --> ONNX model files --> ONNX.js on web browsers</b></p>
 
-As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in fast-neural-style example only_.
+As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in this fork of fast-neural-style example only_.
 
 This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3) running on Windows 10 or Ubuntu 18.04.
 
 See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in docs if you are interested in technical details.
 
-## Setup and convert pre-trained PyTorch fast-neural-style model files (.pth) to ONNX (.onnx)
+Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.
+
+## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
 
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
    - Set up CUDA if necessary.
@@ -25,21 +27,25 @@ See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in docs if y
 2. Setup ONNX:
    - `pip install onnx`
    - [ONNX](https://github.com/onnx/onnx) GitHub repository.
-3. Clone this repository:
-   - `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
-4. Download the pre-trained models:
-   - In this repo, run `download_saved_models.py` to download the 4 pre-trained `.pth` model files.  The model files will be extracted to `saved_models` folder:  
+3. Clone this repository and download pre-trained models:
+   - Clone this repo: `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
+   - Run `download_saved_models.py` to download the 4 pre-trained `.pth` model files.  The model files will be extracted to `saved_models` folder:  
    `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
-5. Run inference eval and export the `.pth` model to `.onnx` files:  
-   - For example, to convert/export `mosaic.pth` to `mosaic.onnx` with nVidia GPU:  
-   `python neural_style/neural_style.py eval --model saved_models/mosaic.pth --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg --export_onnx saved_onnx/mosaic.onnx --cuda 1`
+4. Run inference eval and export the `.pth` model to `.onnx` files:  
+   - For example, to convert/export `saved_models/mosaic.pth` to `saved_onnx/mosaic.onnx` with nVidia GPU:  
+      ```
+      python neural_style/neural_style.py eval --model saved_models/mosaic.pth \
+              --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg \
+              --export_onnx saved_onnx/mosaic.onnx --cuda 1
+      ```
    - With CPU: specify `--cuda 0` in the above python command line.
+   - The output image `amber_mosaic.jpg` is created.
    - The exported `mosaic.onnx` model file is saved in `saved_onnx` folder.
 
-The generated `mosaic.onnx` model file in `saved_onnx` folder can then be inferenced by ONNX.js in supported web browsers.
+The generated `mosaic.onnx` model file can then be inferenced by ONNX.js in supported web browsers.
 
-## System and web browser resource considerations
-When running inference eval on a resource limited systems, such as CPU + 8GB of RAM or GPU + 2GB VRAM, the eval may result in **`Segmentation fault (core dumped)`** error.  This is mainly due to insufficient memory when doing inference run.  PyTorch needs to run inference to build model graph.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
+## System resource considerations
+When running PyTorch inference eval on a resource limited systems, such as CPU + 8GB of RAM (i.e. Intel HD Graphics 520) or GPU + 2GB VRAM (i.e. nVidia MX150), the eval may result in **`Segmentation fault (core dumped)`** error.  This is mainly due to insufficient memory when doing inference run.  PyTorch needs to run inference to build model graph.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
 
 In the above inference eval, `amber.jpg` is an image of size 1080x1080.  `--content-scale 2` would scale down the image size to 540x540.  
 ```
@@ -49,8 +55,8 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
-## Run fast-neural-style with ONNX.js
-Goto [ONNX.js fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the resource situation.
+## Run FNS with ONNX.js
+Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the resource situation.
 
 ### Eval-to-export to smaller sizes for web inference
 When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the content image size even futher to 128x128 and 256x256 using `--content-scale` option.

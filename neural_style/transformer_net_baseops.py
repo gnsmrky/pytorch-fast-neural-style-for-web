@@ -4,7 +4,7 @@ ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRUNTIME"  # default, exports the original PyTo
 ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS"       #          exports the model with compatible InstanceNorm() and UpSampleBy2()
 ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and padding
 
-ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXJS  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
+ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXRT  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
 
 #NUM_CHANNELS = 16 # default is 32
