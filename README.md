@@ -16,7 +16,7 @@ Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-ne
 
 - [Setup and convert pre-trained PyTorch FNS model files](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx)
 - [System resource considerations](#system-resource-considerations)
-- [Export FNS models for ONNX.js](export-fns-models-for-onnxjs)
+- [Export FNS models for ONNX.js](#export-fns-models-for-onnxjs)
 ## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
 
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
