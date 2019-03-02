@@ -14,6 +14,9 @@ See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in docs if y
 
 Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.
 
+- [Setup and convert pre-trained PyTorch FNS model files](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx)
+- [System resource considerations](#system-resource-considerations)
+- [Export FNS models for ONNX.js](export-fns-models-for-onnxjs)
 ## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
 
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
@@ -55,7 +58,7 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
-## Run FNS with ONNX.js
+## Export FNS models for ONNX.js
 Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the resource situation.
 
 ### Eval-to-export to smaller sizes for web inference
