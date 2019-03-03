@@ -4,7 +4,7 @@ ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRUNTIME"  # default, exports the original PyTo
 ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS"       #          exports the model with compatible InstanceNorm() and UpSampleBy2()
 ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and padding
 
-ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXRT  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
+DEFAULT_ONNX_EXPORT_TARGET = 'ONNXJS'  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
 
 #NUM_CHANNELS = 16 # default is 32
@@ -12,74 +12,74 @@ ONNX_EXPORT_TARGET = ONNX_EXPORT_TARGET_ONNXRT  # ONNX_EXPORT_TARGET_ONNXRT or O
 def _instance_norm (target_fw):
     ins_norm = torch.nn.InstanceNorm2d
 
-    if target_fw is ONNX_EXPORT_TARGET_ONNXRT:
+    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         ins_norm = torch.nn.InstanceNorm2d
 
-    elif target_fw is ONNX_EXPORT_TARGET_ONNXJS:
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
         ins_norm = InstanceNorm2d_ONNXJS
 
-    elif target_fw is ONNX_EXPORT_TARGET_PLAIDML:
+    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
         ins_norm = InstanceNorm2d
 
     return ins_norm
 
 # functional layer used in UpsampleConvLayer()
 def _padding (target_fw, padding):
-    if target_fw is ONNX_EXPORT_TARGET_ONNXRT:
+    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         return torch.nn.ReflectionPad2d(padding)
 
-    elif target_fw is ONNX_EXPORT_TARGET_ONNXJS:
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
         return torch.nn.ReflectionPad2d(padding)
 
-    elif target_fw is ONNX_EXPORT_TARGET_PLAIDML:
+    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
         return torch.nn.ZeroPad2d(padding)
     
     return torch.nn.ReflectionPad2d(padding)
 
 # functional layer used in UpsampleConvLayer()
 def _upsample_by_2 (target_fw, x, c, h, w):
-    if target_fw is ONNX_EXPORT_TARGET_ONNXRT:
+    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=2)
 
-    elif target_fw is ONNX_EXPORT_TARGET_ONNXJS:
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
         return upsample_by_2(x, c, h, w)
 
-    elif target_fw is ONNX_EXPORT_TARGET_PLAIDML:
+    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
         return upsample_by_2(x, c, h, w)
     
     return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=self.upsample)
 
 class TransformerNet_BaseOps(torch.nn.Module):
-    def __init__(self, img_in, num_channels=32):
+    def __init__(self, img_in, num_channels=32, target_framework=DEFAULT_ONNX_EXPORT_TARGET):
         super(TransformerNet_BaseOps, self).__init__()
 
         # Initial convolution layers
-        self.conv1 = ConvLayer(3, num_channels, kernel_size=9, stride=1)
-        self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels, affine=True)
+        self.conv1 = ConvLayer(3, num_channels, kernel_size=9, stride=1, target_fw=target_framework)
+        self.in1 = _instance_norm(target_framework)(num_channels, affine=True)
         
-        self.conv2 = ConvLayer(num_channels, num_channels*2, kernel_size=3, stride=2)
-        self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels*2, affine=True)
+        self.conv2 = ConvLayer(num_channels, num_channels*2, kernel_size=3, stride=2, target_fw=target_framework)
+        self.in2 = _instance_norm(target_framework)(num_channels*2, affine=True)
 
-        self.conv3 = ConvLayer(num_channels*2, num_channels*4, kernel_size=3, stride=2)
-        self.in3 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels*4, affine=True)
+        self.conv3 = ConvLayer(num_channels*2, num_channels*4, kernel_size=3, stride=2, target_fw=target_framework)
+        self.in3 = _instance_norm(target_framework)(num_channels*4, affine=True)
 
         # Residual layers
-        self.res1 = ResidualBlock(num_channels*4)
-        self.res2 = ResidualBlock(num_channels*4)
-        self.res3 = ResidualBlock(num_channels*4)
-        self.res4 = ResidualBlock(num_channels*4)
-        self.res5 = ResidualBlock(num_channels*4)
+        self.res1 = ResidualBlock(num_channels*4, target_fw=target_framework)
+        self.res2 = ResidualBlock(num_channels*4, target_fw=target_framework)
+        self.res3 = ResidualBlock(num_channels*4, target_fw=target_framework)
+        self.res4 = ResidualBlock(num_channels*4, target_fw=target_framework)
+        self.res5 = ResidualBlock(num_channels*4, target_fw=target_framework)
         
         # Upsampling Layers
         img_h = img_in.shape[2]
         img_w = img_in.shape[3]
-        self.deconv1 = UpsampleConvLayer(img_h//4, img_w//4, num_channels*4, num_channels*2, kernel_size=3, stride=1, upsample=2)
-        self.in4 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels*2, affine=True)
+        self.deconv1 = UpsampleConvLayer(img_h//4, img_w//4, num_channels*4, num_channels*2, kernel_size=3, stride=1, upsample=2, target_fw=target_framework)
+        self.in4 = _instance_norm(target_framework)(num_channels*2, affine=True)
 
-        self.deconv2 = UpsampleConvLayer(img_h//2, img_w//2, num_channels*2, num_channels, kernel_size=3, stride=1, upsample=2)
-        self.in5 = _instance_norm(ONNX_EXPORT_TARGET)(num_channels, affine=True)
+        self.deconv2 = UpsampleConvLayer(img_h//2, img_w//2, num_channels*2, num_channels, kernel_size=3, stride=1, upsample=2, target_fw=target_framework)
+        self.in5 = _instance_norm(target_framework)(num_channels, affine=True)
 
-        self.deconv3 = ConvLayer(num_channels, 3, kernel_size=9, stride=1)
+        self.deconv3 = ConvLayer(num_channels, 3, kernel_size=9, stride=1, target_fw=target_framework)
 
         # Non-linearities
         self.relu = torch.nn.ReLU()
@@ -101,10 +101,10 @@ class TransformerNet_BaseOps(torch.nn.Module):
 
 
 class ConvLayer(torch.nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, target_fw):
         super(ConvLayer, self).__init__()
         reflection_padding = kernel_size // 2
-        self.reflection_pad = _padding(ONNX_EXPORT_TARGET, reflection_padding)
+        self.reflection_pad = _padding(target_fw, reflection_padding)
         self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
     def forward(self, x):
@@ -119,13 +119,13 @@ class ResidualBlock(torch.nn.Module):
     recommended architecture: http://torch.ch/blog/2016/02/04/resnets.html
     """
 
-    def __init__(self, channels):
+    def __init__(self, channels, target_fw):
         super(ResidualBlock, self).__init__()
-        self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-        self.in1 = _instance_norm(ONNX_EXPORT_TARGET)(channels, affine=True)
+        self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1, target_fw=target_fw)
+        self.in1 = _instance_norm(target_fw)(channels, affine=True)
 
-        self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-        self.in2 = _instance_norm(ONNX_EXPORT_TARGET)(channels, affine=True)
+        self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1, target_fw=target_fw)
+        self.in2 = _instance_norm(target_fw)(channels, affine=True)
 
         self.relu = torch.nn.ReLU()
 
@@ -226,22 +226,23 @@ class UpsampleConvLayer(torch.nn.Module):
     ref: http://distill.pub/2016/deconv-checkerboard/
     """
 
-    def __init__(self, src_h, src_w, in_channels, out_channels, kernel_size, stride, upsample=None):
+    def __init__(self, src_h, src_w, in_channels, out_channels, kernel_size, stride, upsample=None, target_fw=DEFAULT_ONNX_EXPORT_TARGET):
         super(UpsampleConvLayer, self).__init__()
         self.upsample = upsample
         reflection_padding = kernel_size // 2
-        self.reflection_pad = _padding(ONNX_EXPORT_TARGET, reflection_padding)
+        self.reflection_pad = _padding(target_fw, reflection_padding)
         self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
         # for upsample_by_2()
         self.in_channels = in_channels
         self.src_h       = src_h 
         self.src_w       = src_w
+        self.target_fw   = target_fw
 
     def forward(self, x):
         x_in = x
         if self.upsample:
-            x_in = _upsample_by_2(ONNX_EXPORT_TARGET, x_in, self.in_channels, self.src_h, self.src_w)
+            x_in = _upsample_by_2(self.target_fw, x_in, self.in_channels, self.src_h, self.src_w)
 
         out = self.reflection_pad(x_in)
         out = self.conv2d(out)
