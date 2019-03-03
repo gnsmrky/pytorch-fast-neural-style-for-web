@@ -18,7 +18,6 @@ Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-ne
 - [System resource considerations](#system-resource-considerations)
 - [Export FNS models for ONNX.js](#export-fns-models-for-onnxjs)
 ## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
-
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
    - Set up CUDA if necessary.
    - This repo is based on PyTorch v1.0 `pip` installation with Python 3.6 and CUDA 10.0 on Windows 10:  
@@ -26,14 +25,17 @@ Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-ne
    pip3 install https://download.pytorch.org/whl/cu100/torch-1.0.1-cp36-cp36m-win_amd64.whl
    pip3 install torchvision
    ```
+   
+2. Clone this repository and download pre-trained models:
+   - Clone this repo: `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
+   - Download and extract pre-trained model files.  
+     `python download_saved_models.py`
+   - The 4 pre-trained `.pth` model files will be extracted automatically to `saved_models` folder:  
+   `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
 
-2. Setup ONNX:
+3. Setup ONNX:
    - `pip install onnx`
    - [ONNX](https://github.com/onnx/onnx) GitHub repository.
-3. Clone this repository and download pre-trained models:
-   - Clone this repo: `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
-   - Run `download_saved_models.py` to download the 4 pre-trained `.pth` model files.  The model files will be extracted to `saved_models` folder:  
-   `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
 4. Run inference eval and export the `.pth` model to `.onnx` files:  
    - For example, to convert/export `saved_models/mosaic.pth` to `saved_onnx/mosaic.onnx` with nVidia GPU:  
       ```
@@ -41,11 +43,11 @@ Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-ne
               --content-image images/content-images/amber.jpg --output-image amber_mosaic.jpg \
               --export_onnx saved_onnx/mosaic.onnx --cuda 1
       ```
+   - The exported `mosaic.onnx` model file is saved in `saved_onnx` folder.
    - With CPU: specify `--cuda 0` in the above python command line.
    - The output image `amber_mosaic.jpg` is created.
-   - The exported `mosaic.onnx` model file is saved in `saved_onnx` folder.
 
-The generated `mosaic.onnx` model file can then be inferenced by ONNX.js in supported web browsers.
+The generated `mosaic.onnx` model file can then be inferenced by ONNX.js in supported web browsers.  However, the `.onnx` model file can be too large to run in web browsers.  Read on for additional works to make it runnable in web browsers.
 
 ## System resource considerations
 When running PyTorch inference eval on a resource limited systems, such as CPU + 8GB of RAM (i.e. Intel HD Graphics 520) or GPU + 2GB VRAM (i.e. nVidia MX150), the eval may result in **`Segmentation fault (core dumped)`** error.  This is mainly due to insufficient memory when doing inference run.  PyTorch needs to run inference to build model graph.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
@@ -57,7 +59,7 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
-## Export FNS models for ONNX.js
+## Export FNS ONNX model files for ONNX.js
 Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the resource situation.
 
 ### Eval-to-export to smaller sizes for web inference
@@ -94,11 +96,11 @@ python neural_style/neural_style.py eval --content-scale 4.21875 --model saved_m
 ```
 
 ## Smaller ONNX model files (~6.9MB vs ~1.9MB)
-Resizing input content image does not reduce the model files.  Only the resource needed when running inference eval as convolution sweeps smaller images needs smaller memory footprint.  The number of parameters is kept the same.
+Resizing input content image does not reduce the model file size.  It only reduce the resource needed when running inference eval.  Convolution that sweeps smaller images needs smaller memory footprint.  The number of parameters in the network is kept the same.
 
-To reduce the model files, the quickest way is to reduce the number of channels (or number of filters) in the network being eval'd.  This requires retraining the network as fewer channels and parameters.
+To reduce the model files, the quickest way is to reduce the number of channels (or number of filters) in the network.  _This requires retraining the network as there are fewer channels and parameters._
 
-PyTorch FNS example was trained with 32 channels to start with for the 1st convolution layer.  With half the number of channels at 16, the model file size is reduced to ~1/4 the size.  
+PyTorch FNS example was trained with 32 channels to start with for the 1st convolution layer.  With half the number of channels at 16, and similarly done so for all the following layers, the model file size is reduced to ~1/4 the size.  
 
 When running with smaller model files, specify `--num-channels 16` when running inference eval.
 
