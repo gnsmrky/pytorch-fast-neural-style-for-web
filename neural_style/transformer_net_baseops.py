@@ -1,6 +1,6 @@
 import torch
 
-ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRUNTIME"  # default, exports the original PyTorch FNS model
+ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"  # default, exports the original PyTorch FNS model
 ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS"       #          exports the model with compatible InstanceNorm() and UpSampleBy2()
 ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and padding
 
