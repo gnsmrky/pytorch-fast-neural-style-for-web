@@ -1,5 +1,5 @@
 # Run PyTorch fast-neural-style (FNS) example with ONNX.js in web browsers
-A fork of PyTorch [fast-neural-style (FNS) example](https://github.com/pytorch/examples/tree/master/fast_neural_style).  The example has built-in onnx export that works with [ONNX Runtime](https://github.com/Microsoft/onnxruntime), but that's about it.  This fork is to modify the example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsers.
+This repo is a fork of PyTorch [fast-neural-style (FNS) example](https://github.com/pytorch/examples/tree/master/fast_neural_style).  The example has built-in ONNX export that works with [ONNX Runtime](https://github.com/Microsoft/onnxruntime), but that's about it.  This fork is to modify the FNS example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsers.
 
 Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  Many workarounds are needed.  This repository is to find out what it takes to make the model conversion a successful one.
 
@@ -19,12 +19,17 @@ Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-ne
 - [Export FNS models for ONNX.js](#export-fns-models-for-onnxjs)
 ## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
-   - Set up CUDA if necessary.
-   - This repo is based on PyTorch v1.0 `pip` installation with Python 3.6 and CUDA 10.0 on Windows 10:  
-   ```
-   pip3 install https://download.pytorch.org/whl/cu100/torch-1.0.1-cp36-cp36m-win_amd64.whl
-   pip3 install torchvision
-   ```
+   - Set up CUDA if necessary.  (If only CPU is desired, install PyTorch 1.0 for CPU.)
+   - This repo is based on PyTorch v1.0 `pip` installation with Python 3.6.
+   - Windows 10 + CUDA 10.0:  
+     ```
+     pip3 install https://download.pytorch.org/whl/cu100/torch-1.0.0-cp36-cp36m-win_amd64.whl
+     pip3 install torchvision
+     ```
+   - Ubuntu 18.04 + CUDA 9.0:
+     ```
+     pip3 install torch torchvision
+     ```
    
 2. Clone this repository and download pre-trained models:
    - Clone this repo: `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
@@ -129,6 +134,14 @@ For `udnie_nc16_b1_e2_1e05_1e10.model` --> `udnie_128x128.onnx` & `udnie_256x256
 python neural_style/neural_style.py eval --num-channels 16 --content-scale 8.4375  --model saved_models_nc16/udnie_nc16_b1_e2_1e05_1e10.model --content-image images/content-images/amber.jpg --output-image amber_udnie_nc16_128.jpg --cuda 1 --export_onnx saved_onnx_nc16/udnie_nc16_128x128.onnx
 python neural_style/neural_style.py eval --num-channels 16 --content-scale 4.21875 --model saved_models_nc16/udnie_nc16_b1_e2_1e05_1e10.model --content-image images/content-images/amber.jpg --output-image amber_udnie_nc16_256.jpg --cuda 1 --export_onnx saved_onnx_nc16/udnie_nc16_256x256.onnx
 ```
+
+### Model file size comparison:
+
+||Original pre-trained model (.pth)|Reduced model `num-channels=16` (.model)|||
+|:-:|:-:|:-:|:-:|:-:|
+||||||
+||||||
+
 ----------
 ----------
 ##### Below from original repo of PyTorch fast-nueral-style
