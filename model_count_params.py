@@ -4,9 +4,9 @@ from onnx import numpy_helper as nphelper
 
 import argparse
 
-parser = argparse.ArgumentParser(description='Count parameters in a PyTOrch model file.')
+parser = argparse.ArgumentParser(description='Count parameters in a PyTorch (.pth or .model) or ONNX (.onnx) model file.')
 parser.add_argument('model_path', metavar='MODEL_PATH', type=str,
-                    help='path to an PyTorch model file (.pth or .model)')
+                    help='Path to an PyTorch (.pth or .model) or ONNX (.onnx) model file.')
 
 args = parser.parse_args()
 
