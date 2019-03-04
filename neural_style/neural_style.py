@@ -151,7 +151,7 @@ def stylize(args):
     else:
         with torch.no_grad():
             #style_model = TransformerNet()
-            style_model = TransformerNet_BaseOps(content_image, args.num_channels) #gnsmrky, use the base ops version.
+            style_model = TransformerNet_BaseOps(content_image, args.num_channels, args.target_framework) #gnsmrky, use the base ops version.
 
             # model summary
             ptsummary (style_model, (3, 256, 256))
@@ -247,6 +247,10 @@ def main():
 
     eval_arg_parser.add_argument("--num-channels", type=int, default=32,
                                  help="number of base channels, default is 32.  lower number for lower resource platforms and faster inference time. (i.e. web)")
+
+    eval_arg_parser.add_argument("--target-framework", type=str, default="ONNXJS",
+                                 help="target deeplearning framework: ONNXRT, ONNXJS or PLAIDML.  default is ONNXJS.")
+
 
     args = main_arg_parser.parse_args()
 
