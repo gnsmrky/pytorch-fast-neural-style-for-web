@@ -134,7 +134,6 @@ def train(args):
     print("\nDone, trained model saved at", save_model_path)
 
 
-from torchsummary import summary as ptsummary
 def stylize(args):
     device = torch.device("cuda" if args.cuda else "cpu")
 
@@ -153,10 +152,12 @@ def stylize(args):
             #style_model = TransformerNet()
             style_model = TransformerNet_BaseOps(content_image, args.num_channels, args.target_framework) #gnsmrky, use the base ops version.
 
-            # model summary
-            ptsummary (style_model, (3, 256, 256))
-
             state_dict = torch.load(args.model)
+
+            # model parameter summary
+            total = sum([param.nelement() for param in style_model.parameters()])
+            print('style_model number of params: %.2fM' % (total / 1e6))
+    
             # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
             for k in list(state_dict.keys()):
                 if re.search(r'in\d+\.running_(mean|var)$', k):

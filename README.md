@@ -137,10 +137,10 @@ python neural_style/neural_style.py eval --num-channels 16 --content-scale 4.218
 
 ### Model file size comparison:
 
-||Original pre-trained model (.pth)|Reduced model `num-channels=16` (.model)|||
+||Original model `nc32`(.pth)|Converted ONNX `nc32`|Reduced model `nc16`|Converted ONNX `nc16`|
 |:-:|:-:|:-:|:-:|:-:|
-||||||
-||||||
+|File size|~6.7MB|~7MB|~1.7MB|~2MB|
+|# of params|1.68M||0.42M||
 
 ----------
 ----------
