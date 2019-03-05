@@ -179,33 +179,33 @@ The results are shown in the following table.  The stylized image from reduced m
   <br/>
 </div>
 <br/>
-<center>
+<div align='center'>
 <table>
   <th>Style Image</th>
   <th>Original Model (.pth)<br/> <code>--num-channels=32</code><br/><code>--batch-size=4</code></th>
   <th>Reduced Model (.model)<br/> <code>--num-channels=16</code><br/><code>--batch-size=1</code></th>
   <tr>
-    <td><img src='images/style-images/mosaic.jpg' width="233px"></td>
-    <td><a href="images/output-images/amber-mosaic.jpg"><img src='images/output-images/amber-mosaic.jpg' width="233px"></a></td>
-    <td><a href="images/output-images/amber-mosaic_nc16.jpg"><img src='images/output-images/amber-mosaic_nc16.jpg' width="233px"></a></td>
+    <td><img src='images/style-images/mosaic.jpg' width="400px"></td>
+    <td><a href="images/output-images/amber-mosaic.jpg"><img src='images/output-images/amber-mosaic.jpg' width="400px"></a></td>
+    <td><a href="images/output-images/amber-mosaic_nc16.jpg"><img src='images/output-images/amber-mosaic_nc16.jpg' width="400px"></a></td>
   </tr>
   <tr>
-    <td><img src='images/style-images/candy.jpg' width="233px"></td>
-    <td><a href="images/output-images/amber-candy.jpg"><img src='images/output-images/amber-candy.jpg' width="233px"></a></td>
-    <td><a href="images/output-images/amber-candy_nc16.jpg"><img src='images/output-images/amber-candy_nc16.jpg' width="233px"></a></td>
+    <td><img src='images/style-images/candy.jpg' width="400px"></td>
+    <td><a href="images/output-images/amber-candy.jpg"><img src='images/output-images/amber-candy.jpg' width="400px"></a></td>
+    <td><a href="images/output-images/amber-candy_nc16.jpg"><img src='images/output-images/amber-candy_nc16.jpg' width="400px"></a></td>
   </tr>
   <tr>
-    <td><img src='images/style-images/rain-princess-cropped.jpg' width="233px"></td>
-    <td><a href="images/output-images/amber-rain-princess.jpg"><img src='images/output-images/amber-rain-princess.jpg' width="233px"></a></td>
-    <td><a href="images/output-images/amber-rain-princess_nc16.jpg"><img src='images/output-images/amber-rain-princess_nc16.jpg' width="233px"></a></td>
+    <td><img src='images/style-images/rain-princess-cropped.jpg' width="400px"></td>
+    <td><a href="images/output-images/amber-rain-princess.jpg"><img src='images/output-images/amber-rain-princess.jpg' width="400px"></a></td>
+    <td><a href="images/output-images/amber-rain-princess_nc16.jpg"><img src='images/output-images/amber-rain-princess_nc16.jpg' width="400px"></a></td>
   </tr>
   <tr>
-    <td><img src='images/style-images/udnie.jpg' width="233px"></td>
-    <td><a href="images/output-images/amber-udnie.jpg"><img src='images/output-images/amber-udnie.jpg' width="233px"></a></td>
-    <td><a href="images/output-images/amber-udnie_nc16.jpg"><img src='images/output-images/amber-udnie_nc16.jpg' width="233px"></a></td>
+    <td><img src='images/style-images/udnie.jpg' width="400px"></td>
+    <td><a href="images/output-images/amber-udnie.jpg"><img src='images/output-images/amber-udnie.jpg' width="400px"></a></td>
+    <td><a href="images/output-images/amber-udnie_nc16.jpg"><img src='images/output-images/amber-udnie_nc16.jpg' width="400px"></a></td>
   </tr>
 </table>
-</center>
+</div>
 
 ### Model comparison:
 
