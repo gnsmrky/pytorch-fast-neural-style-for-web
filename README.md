@@ -209,10 +209,11 @@ The results are shown in the following table.  The stylized image from reduced m
 
 ### Model comparison:
 
-||Original&nbsp;model&nbsp;(.pth)<br/><code>&#x2011;&#x2011;num&#x2011;channels=32</code>|Converted&nbsp;ONNX<br/><code>&#x2011;&#x2011;num&#x2011;channels=32|Reduced&nbsp;model&nbsp;(.model) <br/><code>&#x2011;&#x2011;num&#x2011;channels=16|Reduced&nbsp;ONNX <br/><code>&#x2011;&#x2011;num&#x2011;channels=16|
+|&nbsp;|Original&nbsp;model&nbsp;(.pth)<br/><code>&#x2011;&#x2011;num&#x2011;channels=32</code>|Converted&nbsp;ONNX<br/><code>&#x2011;&#x2011;num&#x2011;channels=32|Reduced&nbsp;model&nbsp;(.model) <br/><code>&#x2011;&#x2011;num&#x2011;channels=16|Reduced&nbsp;ONNX <br/><code>&#x2011;&#x2011;num&#x2011;channels=16|
 |:-:|:-:|:-:|:-:|:-:|
 |File&nbsp;size|~6.7MB|~7MB*|~1.7MB|~2MB*|
 |# of params**|~1.68M|~1.68M|~0.42M|~0.42M|
+
 \* ONNX model file is a bit larger due to the network graph is also stored in the file.  
 \*\* Use `model_count_params.py` to count parameters in PyTorch (`.pth` or `.model`) or ONNX (`.onnx`) model files.
 
