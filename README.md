@@ -1,10 +1,10 @@
 # Run PyTorch fast-neural-style (FNS) example with ONNX.js in web browsers
 This repo is a fork of PyTorch [fast-neural-style (FNS) example](https://github.com/pytorch/examples/tree/master/fast_neural_style).  The example has built-in ONNX export that works with [ONNX Runtime](https://github.com/Microsoft/onnxruntime), but that's about it.  This fork is to modify the FNS example so it runs with [ONNX.js](https://github.com/Microsoft/onnxjs) in web browsers.
 
-Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  Many workarounds are needed.  This repository is to find out what it takes to make the model conversion a successful one.
+Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  Many workarounds are needed to make the neural-style-transfer run in ONNX.js.  This repository is to find out what it takes to make the model conversion a successful one.
 
 It follows the process:  
-<p align="center"><b>PyTorch FNS example --> PyTorch model files (.pth) --> ONNX model files --> ONNX.js on web browsers</b></p>
+<p align="center"><b>PyTorch FNS example --> PyTorch model files (.pth/.model) --> ONNX model files (.onnx) --> ONNX.js on web browsers</b></p>
 
 As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in this fork of fast-neural-style example only_.
 
@@ -16,11 +16,15 @@ Quick links:
 
 - [System resource considerations](#system-resource-considerations)
 
+- [Reduced model for lower system resource requirement and faster inference time](#Reduced-model-for-lower-system-resource-requirement-and-faster-inference-time-67mb-vs-17mb-file-sizes)
+
+- [Stylized image output with reduced model](#stylized-image-output-with-reduced-model)
+
 - [Export FNS models for ONNX.js](#export-fns-models-for-onnxjs)
 
-- See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in technical details.
+- See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in more technical details.
 
-- Goto [fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.
+- Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as a quick demo with ONNX.js running on web browsers.
 
 ## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
@@ -160,17 +164,29 @@ Content image `amber.jpg` has resolution of 1080x1080:
 </table>
 
 
-## Reduced ONNX model files (~6.7MB vs ~1.7MB file sizes)
+## Reduced model for lower system resource requirement and faster inference time (~6.7MB vs ~1.7MB file sizes)
 Resizing input content image does not reduce the model file size.  It only reduce the resource needed when running inference eval.  Convolution that sweeps smaller images needs smaller memory footprint.  The number of parameters in the network, however, is kept the same.
 
-To reduce the model files, the quickest way is to reduce the number of channels (or number of filters) in the network.  _This **requires retraining** the network as there are fewer channels and parameters._  The re-trained weights are stored in PyTorch model files (.model).
+PyTorch FNS example was trained with 32 channels to start with for the 1st convolution layer.  To reduce the model file size, the quickest way is to reduce the number of channels (or number of filters) in the network.  _This **requires retraining** the network as there are fewer channels and parameters._  The newly trained weights are stored in PyTorch model files (.model).
 
-PyTorch FNS example was trained with 32 channels to start with for the 1st convolution layer.  With half the number of channels at 16, and similarly done so for all the following layers, the model file size is reduced to ~1/4 the size.  
+With half the number of channels at 16, and similarly done so for all the following layers, the model file size is reduced to ~1/4 the size.  
 
-Specify `--num-channels 16` when running inference eval with reduced network model files.
+The newly trained model files are provided in `saved_models_nc16` folder.  Specify `--num-channels 16` when running inference eval with reduced network model files.  The corresponding exported ONNX model files for 128x128 and 256x256 content image size are in `saved_onnx_nc16` folder.  (Due to fewer channels, the `--batch-size=1 (default is 4)` was used when doing training so style features are not batch normalized as much.)
 
-The pre-trained model files are provided in `saved_models_nc16` folder.  The corresponding exported ONNX model files for 128x128 and 256x256 content image size are in `saved_onnx_nc16` folder.  Due to fewer channels, the `--batch-size=1 (default is 4)` was used when doing training.
+### Model comparison:
 
+|&nbsp;|Original&nbsp;model&nbsp;(.pth)|Converted&nbsp;ONNX|Reduced&nbsp;model&nbsp;(.model)|Reduced&nbsp;ONNX|
+|:-:|:-:|:-:|:-:|:-:|
+|<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|4|1|1|
+|<code>&#x2011;&#x2011;num&#x2011;channels</code>|32|32|16|16|
+|File&nbsp;size|~6.7MB|~7MB\*\*|~1.7MB|~2MB\*\*|
+|# of params\*\*\*|~1.68M|~1.68M|~0.42M|~0.42M|
+
+\* `--batch-size` is only used during training to reduce level of image feature normalization.  This option is _not_ required when running inference eval.  
+\*\* ONNX model file is a bit larger due to the network graph is also stored in the file.  
+\*\*\* Use `model_count_params.py` to count parameters in PyTorch (`.pth` or `.model`) or ONNX (`.onnx`) model files.
+
+## Stylized image output with reduced model
 The results are shown in the following table.  The stylized image from reduced model is quite similar to the original model.  Yet the model size and total parameter count is reduced by ~75%.
 
 <div align='center'>
@@ -206,16 +222,6 @@ The results are shown in the following table.  The stylized image from reduced m
   </tr>
 </table>
 </div>
-
-### Model comparison:
-
-|&nbsp;|Original&nbsp;model&nbsp;(.pth)<br/><code>&#x2011;&#x2011;num&#x2011;channels=32</code>|Converted&nbsp;ONNX<br/><code>&#x2011;&#x2011;num&#x2011;channels=32|Reduced&nbsp;model&nbsp;(.model) <br/><code>&#x2011;&#x2011;num&#x2011;channels=16|Reduced&nbsp;ONNX <br/><code>&#x2011;&#x2011;num&#x2011;channels=16|
-|:-:|:-:|:-:|:-:|:-:|
-|File&nbsp;size|~6.7MB|~7MB*|~1.7MB|~2MB*|
-|# of params**|~1.68M|~1.68M|~0.42M|~0.42M|
-
-\* ONNX model file is a bit larger due to the network graph is also stored in the file.  
-\*\* Use `model_count_params.py` to count parameters in PyTorch (`.pth` or `.model`) or ONNX (`.onnx`) model files.
 
 ## Snippets - Convert reduced model (.model) to ONNX (.onnx)
 - Specify `--num-channels 16` when doing inference run for ONNX export.
