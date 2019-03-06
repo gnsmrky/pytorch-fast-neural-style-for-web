@@ -1,10 +1,17 @@
 import torch
 
-ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"  # default, exports the original PyTorch FNS model
-ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS"       #          exports the model with compatible InstanceNorm() and UpSampleBy2()
-ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and padding
+ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"       # default, exports the original PyTorch FNS model
 
-DEFAULT_ONNX_EXPORT_TARGET = 'ONNXJS'  # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
+ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS_013"   # targets ONNX.js v0.1.3
+                                            #          exports the model with compatible InstanceNorm() and UpSampleBy2()
+
+ONNX_EXPORT_TARGET_ONNXJS  = "ONNXJS"       # targets ONNX.js v0.1.4 and above, which supports InstanceNorm() by 'cpu' and 'wasm' backend.
+                                            #          exports the model with compatible UpSampleBy2()
+
+ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and zero padding
+
+
+DEFAULT_ONNX_EXPORT_TARGET = 'ONNXJS'       # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
 
 #NUM_CHANNELS = 16 # default is 32
@@ -15,8 +22,11 @@ def _instance_norm (target_fw):
     if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         ins_norm = torch.nn.InstanceNorm2d
 
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_013:
         ins_norm = InstanceNorm2d_ONNXJS
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
+        ins_norm = torch.nn.InstanceNorm2d
 
     elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
         ins_norm = InstanceNorm2d
@@ -26,6 +36,9 @@ def _instance_norm (target_fw):
 # functional layer used in UpsampleConvLayer()
 def _padding (target_fw, padding):
     if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_013:
         return torch.nn.ReflectionPad2d(padding)
 
     elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
@@ -40,6 +53,9 @@ def _padding (target_fw, padding):
 def _upsample_by_2 (target_fw, x, c, h, w):
     if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=2)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_013:
+        return upsample_by_2(x, c, h, w)
 
     elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
         return upsample_by_2(x, c, h, w)
