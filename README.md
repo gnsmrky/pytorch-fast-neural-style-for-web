@@ -177,8 +177,8 @@ The newly trained model files are provided in `saved_models_nc16` folder.  Speci
 
 |&nbsp;|Original&nbsp;model&nbsp;(.pth)|Converted&nbsp;ONNX|Reduced&nbsp;model&nbsp;(.model)|Reduced&nbsp;ONNX|
 |:-:|:-:|:-:|:-:|:-:|
-|<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|4|1|1|
 |<code>&#x2011;&#x2011;num&#x2011;channels</code>|32|32|16|16|
+|<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|4|1|1|
 |File&nbsp;size|~6.7MB|~7MB\*\*|~1.7MB|~2MB\*\*|
 |# of params\*\*\*|~1.68M|~1.68M|~0.42M|~0.42M|
 
@@ -191,7 +191,7 @@ The results are shown in the following table.  The stylized image from reduced m
 
 <div align='center'>
   <img src='images/content-images/amber.jpg' width="233px"><br/>
-  Content image - amber.jpg
+  Content image - <b>amber.jpg</b>
   <br/>
 </div>
 <br/>
@@ -201,22 +201,22 @@ The results are shown in the following table.  The stylized image from reduced m
   <th>Original Model (.pth)<br/> <code>--num-channels=32</code><br/><code>--batch-size=4</code></th>
   <th>Reduced Model (.model)<br/> <code>--num-channels=16</code><br/><code>--batch-size=1</code></th>
   <tr>
-    <td><img src='images/style-images/mosaic.jpg' width="400px"></td>
+    <td><img src='images/style-images/mosaic.jpg' width="400px"><br/><center>mosaic.jpg</center></td>
     <td><a href="images/output-images/amber-mosaic.jpg"><img src='images/output-images/amber-mosaic.jpg' width="400px"></a></td>
     <td><a href="images/output-images/amber-mosaic_nc16.jpg"><img src='images/output-images/amber-mosaic_nc16.jpg' width="400px"></a></td>
   </tr>
   <tr>
-    <td><img src='images/style-images/candy.jpg' width="400px"></td>
+    <td><img src='images/style-images/candy.jpg' width="400px"><br/><center>candy.jpg</center></td>
     <td><a href="images/output-images/amber-candy.jpg"><img src='images/output-images/amber-candy.jpg' width="400px"></a></td>
     <td><a href="images/output-images/amber-candy_nc16.jpg"><img src='images/output-images/amber-candy_nc16.jpg' width="400px"></a></td>
   </tr>
   <tr>
-    <td><img src='images/style-images/rain-princess-cropped.jpg' width="400px"></td>
+    <td><img src='images/style-images/rain-princess-cropped.jpg' width="400px"><br/><center>rain-princess-cropped.jpg</center></td>
     <td><a href="images/output-images/amber-rain-princess.jpg"><img src='images/output-images/amber-rain-princess.jpg' width="400px"></a></td>
     <td><a href="images/output-images/amber-rain-princess_nc16.jpg"><img src='images/output-images/amber-rain-princess_nc16.jpg' width="400px"></a></td>
   </tr>
   <tr>
-    <td><img src='images/style-images/udnie.jpg' width="400px"></td>
+    <td><img src='images/style-images/udnie.jpg' width="400px"><br/><center>udnie.jpg</center></td>
     <td><a href="images/output-images/amber-udnie.jpg"><img src='images/output-images/amber-udnie.jpg' width="400px"></a></td>
     <td><a href="images/output-images/amber-udnie_nc16.jpg"><img src='images/output-images/amber-udnie_nc16.jpg' width="400px"></a></td>
   </tr>
@@ -310,6 +310,12 @@ The results are shown in the following table.  The stylized image from reduced m
 ----------
 ----------
 ##### Below from original repo of PyTorch fast-nueral-style...
+----------
+----------
+----------
+----------
+----------
+----------
 
 # fast-neural-style :city_sunrise: :rocket:
 This repository contains a pytorch implementation of an algorithm for artistic style transfer. The algorithm can be used to mix the content of an image with the style of another image. For example, here is a photograph of a door arch rendered in the style of a stained glass painting.
