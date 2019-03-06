@@ -97,7 +97,7 @@ Content image `amber.jpg` has resolution of 1080x1080:
 <td>candy.pth</td>
 <td>128x128</td>
 <td>  
-  <code>python neural_style/neural_style.py eval <b>--content-scale 8.4375</b>  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_128x128.jpg
+  <code>python neural_style/neural_style.py eval <b>--content-scale 8.4375</b>  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_128x128.jpg --export_onnx saved_onnx/candy_128x128.onnx
   </code>
 </td>
 </tr>
@@ -105,7 +105,7 @@ Content image `amber.jpg` has resolution of 1080x1080:
 <td>candy.pth</td>
 <td>256x256</td>
 <td>  
-  <code>python neural_style/neural_style.py eval <b>--content-scale 4.21875</b>  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_256x256.jpg
+  <code>python neural_style/neural_style.py eval <b>--content-scale 4.21875</b>  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_256x256.jpg --export_onnx saved_onnx/candy_256x256.onnx
   </code>
 </td>
 </tr>
