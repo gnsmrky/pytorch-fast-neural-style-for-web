@@ -20,7 +20,7 @@ Quick links:
 
 - [Stylized image output with reduced model](#stylized-image-output-with-reduced-model)
 
-- [Export FNS models for ONNX.js](#export-fns-models-for-onnxjs)
+- [Export FNS models for ONNX.js](#export-fns-onnx-model-files-for-ONNX.js)
 
 - See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in more technical details.
 
