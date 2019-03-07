@@ -20,7 +20,7 @@ Quick links:
 
 - [Stylized image output with reduced model](#stylized-image-output-with-reduced-model)
 
-- [Eval/export ONNX for smaller input image sizes for ONNX.js web inference](#Eval-export-ONNX-for-smaller-input-image-sizes-for-ONNX.js-web-inference)
+- [Eval/export ONNX for smaller input image sizes for ONNX.js web inference](#Evalexport-ONNX-for-smaller-input-image-sizes-for-ONNX.js-web-inference)
 
 - See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in more technical details.
 
@@ -90,7 +90,7 @@ To export `candy.pth` to have 256x256 input image size.
 <code>python neural_style/neural_style.py eval <b>--content-scale 4.21875</b>  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_256x256.jpg --export_onnx saved_onnx/candy_256x256.onnx
 </code>
 
-Goto [Python snippets for smaller image input sizes](python-snippets-for-smaller-image-input-sizes) for the complete list.
+Goto [Python snippets for smaller image input sizes](#python-snippets-for-smaller-image-input-sizes) for the complete list.
 
 
 
@@ -154,7 +154,7 @@ The results are shown in the following table.  The stylized image from reduced m
 </div>
 
 
-## Python snippets for smaller image input sizes
+## Python snippets - Export pre-trained model file (.pth) to ONNX (.onnx) with smaller image input sizes
 Content image `amber.jpg` has resolution of 1080x1080:  
 - For target output size at 128x128, use `--content-scale 8.4375` (1080 / 128 = 8.4375)  
 - For target output size at 256x256, use `--content-scale 4.21875`(1080 / 256 = 4.21875)
@@ -231,7 +231,7 @@ Content image `amber.jpg` has resolution of 1080x1080:
 
 </table>
 
-## Snippets - Convert reduced model (.model) to ONNX (.onnx)
+## Python snippets - Export reduced model (.model) to ONNX (.onnx)
 - Specify `--num-channels 16` when doing inference run for ONNX export.
 - The exported ONNX model files can be used in ONNX.js.
 <table>
