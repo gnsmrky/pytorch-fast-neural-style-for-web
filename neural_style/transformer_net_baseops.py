@@ -1,25 +1,28 @@
 import torch
 
+# exports the original model, no workarounds.  The clean model.
 ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"       # default, exports the original PyTorch FNS model
 
-ONNX_EXPORT_TARGET_ONNXJS013  = "ONNXJS_013"    # targets ONNX.js v0.1.3
-                                                #          exports the model with compatible InstanceNorm() and UpSampleBy2()
+# targets ONNX.js v0.1.3
+#   exports the model with compatible 'InstanceNormalization' base ops and UpSampleBy2() (for interpolate) base ops that have issue #53 workaround.
+ONNX_EXPORT_TARGET_ONNXJS013  = "ONNXJS_013"
 
-ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPUWASM"   # targets ONNX.js v0.1.4 and above, which supports InstanceNorm() by 'cpu' and 'wasm' backend.
-                                                        #   exports the model with compatible UpSampleBy2()
-                                                        #   but 'cpu' and 'wasm' does not support 'Pad' op.  use base ops to do zero-pad instead.
-                                                        #       bug: v0.1.4 'wasm' backend has "RuntimeError: memory access out of bounds" error, while 'cpu' backend runs good.
+# targets ONNX.js v0.1.4 and above, which supports 'InstanceNormalization' by 'cpu' and 'wasm' backend.
+#   exports the model with compatible UpSampleBy2() (for interpolate) and 'ZeroPad' base ops ('cpu' and 'wasm' does not support 'Pad' op)
+#   bug: v0.1.4 'wasm' backend has "RuntimeError: memory access out of bounds" error, while 'cpu' backend runs good.
+ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPUWASM"
 
-ONNX_EXPORT_TARGET_ONNXJS = "ONNXJS"        # targets the latest ONNX.js for 'webgl' backend.
-                                            #          for v0.1.4, the only benefit of ONNX.js v0.1.4 is the fix for issue #53
-
-ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      #          exports the model with compatible InstanceNorm(), UpSampleBy2() and zero padding
+# targets the latest ONNX.js for 'webgl' backend.
+#   for v0.1.4, same as v0.1.3 but with issue #53 fixed.
+ONNX_EXPORT_TARGET_ONNXJS = "ONNXJS"        
+                                            
+# targets PlaidML
+#   exports the model with compatible 'InstanceNormalization' base ops, UpSampleBy2() (for interpolate) and ZeroPad2d().
+ONNX_EXPORT_TARGET_PLAIDML = "PLAIDML"      
 
 
 DEFAULT_ONNX_EXPORT_TARGET = "ONNXJS"       # ONNX_EXPORT_TARGET_ONNXRT or ONNX_EXPORT_TARGET_ONNXJS
 
-
-#NUM_CHANNELS = 16 # default is 32
 
 def _instance_norm (target_fw):
     ins_norm = torch.nn.InstanceNorm2d
