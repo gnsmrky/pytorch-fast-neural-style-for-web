@@ -16,11 +16,15 @@ Quick links:
 
 - [System resource considerations](#system-resource-considerations)
 
+- [Eval/export ONNX for smaller input image sizes for ONNX.js web inference](#Evalexport-ONNX-for-smaller-input-image-sizes-for-ONNX.js-web-inference)
+
 - [Reduced model for lower system resource requirement and faster inference time](#Reduced-model-for-lower-system-resource-requirement-and-faster-inference-time-67mb-vs-17mb-file-sizes)
 
 - [Stylized image output with reduced model](#stylized-image-output-with-reduced-model)
 
-- [Eval/export ONNX for smaller input image sizes for ONNX.js web inference](#Evalexport-ONNX-for-smaller-input-image-sizes-for-ONNX.js-web-inference)
+- [Python snippets - Export pre-trained model file (.pth) to ONNX (.onnx) with smaller image input sizes](#python-snippets---export-pre-trained-model-file-pth-to-onnx-onnx-with-smaller-image-input-sizes)
+
+- [Python snippets - Export reduced model (.model) to ONNX (.onnx)](#python-snippets---export-reduced-model-model-to-onnx-onnx)
 
 - See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in more technical details.
 
@@ -82,11 +86,11 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
 ## Eval/export ONNX for smaller input image sizes for ONNX.js web inference
-Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for a quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the constrained resource situation.
+Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the constrained resource situation.
 
 When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the content image size even futher to 128x128 and 256x256 using `--content-scale` option.
 
-To export `candy.pth` to have 256x256 input image size.    
+To export `candy.pth` to have 256x256 input image size.  `--content-scale` is set to `4.21875` (1080 / 256 = 4.21875).  
 <code>python neural_style/neural_style.py eval <b>--content-scale 4.21875</b>  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_256x256.jpg --export_onnx saved_onnx/candy_256x256.onnx
 </code>
 
