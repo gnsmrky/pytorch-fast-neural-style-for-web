@@ -10,6 +10,7 @@ ONNX_EXPORT_TARGET_ONNXJS013  = "ONNXJS_013"
 # targets ONNX.js v0.1.4 and above, which supports 'InstanceNormalization' by 'cpu' and 'wasm' backend.
 #   exports the model with compatible UpSampleBy2() (for interpolate) and 'ZeroPad' base ops ('cpu' and 'wasm' does not support 'Pad' op)
 #   bug: v0.1.4 'wasm' backend has "RuntimeError: memory access out of bounds" error, while 'cpu' backend runs good.
+#           the bug was posted to ONNX.js as issue #102: https://github.com/Microsoft/onnxjs/issues/102
 ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPUWASM"
 
 # targets the latest ONNX.js for 'webgl' backend.
@@ -172,8 +173,27 @@ class ResidualBlock(torch.nn.Module):
         out = out + residual
         return out
 
+# ONNX.js v0.1.4 'cpu' and 'wasm' backend does not support 'Pad' op.
+# manually do 'Pad' using zeros using base ops.
+class ZeroPadding(torch.nn.Module):
+    def __init__(self, padding, channels, x_h, x_w):
+        super(ZeroPadding, self).__init__()
 
-# regular base ops for instance norm
+        self.padding = padding
+        self.x_h = x_h
+        self.x_w = x_w
+
+        self.channels  = channels
+        self.zeropad_w = torch.zeros([1, self.channels, x_h, padding], dtype=torch.float)
+        self.zeropad_h = torch.zeros([1, self.channels, padding, x_w + (padding*2)], dtype=torch.float)
+
+    def forward(self, x):
+        n = torch.cat ([self.zeropad_w, x, self.zeropad_w], 3)
+        n = torch.cat ([self.zeropad_h, n, self.zeropad_h], 2)
+
+        return n
+
+# regular instance norm using base ops 
 class InstanceNorm2d(torch.nn.Module):
     def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=False):
         super(InstanceNorm2d, self).__init__()
@@ -201,27 +221,7 @@ class InstanceNorm2d(torch.nn.Module):
 
         return out
 
-# ONNX.js v0.1.4 'cpu' and 'wasm' backend does not support 'Pad' op.
-# a do-nothing padding class
-class ZeroPadding(torch.nn.Module):
-    def __init__(self, padding, channels, x_h, x_w):
-        super(ZeroPadding, self).__init__()
-
-        self.padding = padding
-        self.x_h = x_h
-        self.x_w = x_w
-
-        self.channels  = channels
-        self.zeropad_w = torch.zeros([1, self.channels, x_h, padding], dtype=torch.float)
-        self.zeropad_h = torch.zeros([1, self.channels, padding, x_w + (padding*2)], dtype=torch.float)
-
-    def forward(self, x):
-        n = torch.cat ([self.zeropad_w, x, self.zeropad_w], 3)
-        n = torch.cat ([self.zeropad_h, n, self.zeropad_h], 2)
-
-        return n
-
-# base ops for instance norm with workarounds for ONNX.js v0.1.3
+# base ops for instance norm with issue #53 workarounds for ONNX.js v0.1.3
 class InstanceNorm2d_ONNXJS013(torch.nn.Module):
     def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=False):
         super(InstanceNorm2d_ONNXJS013, self).__init__()
@@ -261,16 +261,16 @@ class InstanceNorm2d_ONNXJS013(torch.nn.Module):
 # ONNX.js does not support interpolate and upsample ops.  manually do upsample x2 for tensors
 #   ONNX.js v0.1.3 has the issue #53 (https://github.com/Microsoft/onnxjs/issues/53).
 #      This is to avoid issue #53:
-#        Add a small value (1e-100) to avoid the same input being input to 'cat' twice, or onnx.js would result in 'output [#] already has value' error
+#        Add a small value (1e-9) to avoid the same input being input to 'cat' twice, or onnx.js would result in 'output [#] already has value' error
 def upsample_by_2_ONNXJS013 (x, c, h, w):
     bb  = x.view(-1,1)
     #bb1 = x.view(-1,1)
-    bb1 = bb + 1e-100  # avoid view() to speed up a little in ONNX.js
+    bb1 = bb + 1e-9  # avoid view() to speed up a little in ONNX.js
     cc  = torch.cat([bb,bb1],1)
 
     cc1 = cc.view(-1,w*2)
     #cc2 = cc.view(-1,w*2)
-    cc2 = cc1 + 1e-100
+    cc2 = cc1 + 1e-9
     out = torch.cat([cc1,cc2],1).view(-1,c,h*2,w*2)
 
     return out

@@ -4,13 +4,13 @@ This repo is a fork of PyTorch [fast-neural-style (FNS) example](https://github.
 Performance is not the key consideration here, but to make it runnable in target deep learning framework, such as web browsers with ONNX.js.  Many workarounds are needed to make the neural-style-transfer run in ONNX.js.  This repository is to find out what it takes to make the model conversion a successful one.
 
 It follows the process:  
-<p align="center"><b>PyTorch FNS example --> PyTorch model files (.pth/.model) --> ONNX model files (.onnx) --> ONNX.js on web browsers</b></p>
+<p align="center"><b>PyTorch&nbsp;fast-neural-style&nbsp;(FNS)&nbsp;examples --> PyTorch&nbsp;model&nbsp;files&nbsp;(.pth/.model) --> ONNX&nbsp;model&nbsp;files (.onnx) --> ONNX.js&nbsp;on&nbsp;web&nbsp;browsers</b></p>
 
 As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in this fork of fast-neural-style example only_.
 
-This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3) running on Windows 10 or Ubuntu 18.04.
+This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3)/[v0.1.4](https://github.com/Microsoft/onnxjs/tree/v0.1.4) running on Windows 10 or Ubuntu 18.04.
 
-Quick links:
+#### Quick links:
 
 - [Setup and convert pre-trained PyTorch FNS model files](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx)
 
@@ -46,7 +46,7 @@ Quick links:
    
 2. Clone this repository and download pre-trained models:
    - Clone this repo: `git clone https://github.com/gnsmrky/pytorch-fast-neural-style.git`
-   - Download and extract pre-trained model files.  
+   - **Download and extract pre-trained model files.**  
      `python download_saved_models.py`
    - The 4 pre-trained `.pth` model files will be extracted automatically to `saved_models` folder:  
    `candy.pth`, `mosaic.pth`, `rain_princess.pth` and `udnie.pth`
