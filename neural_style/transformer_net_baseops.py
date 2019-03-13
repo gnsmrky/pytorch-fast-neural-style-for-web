@@ -46,25 +46,6 @@ def _instance_norm (target_fw):
     return ins_norm
 
 # functional layer used in UpsampleConvLayer()
-def _padding (target_fw, padding, channels, h, w):
-    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
-        return torch.nn.ReflectionPad2d(padding)
-
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS013:
-        return torch.nn.ReflectionPad2d(padding)
-
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_CPUWASM:
-        return ZeroPadding(padding, channels, h, w)
-
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
-        return torch.nn.ReflectionPad2d(padding)
-
-    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
-        return torch.nn.ZeroPad2d(padding)
-    
-    return torch.nn.ReflectionPad2d(padding)
-
-# functional layer used in UpsampleConvLayer()
 def _upsample_by_2 (target_fw, x, c, h, w):
     if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=2)
@@ -82,6 +63,25 @@ def _upsample_by_2 (target_fw, x, c, h, w):
         return upsample_by_2(x, c, h, w)
     
     return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=self.upsample)
+
+# functional layer used in UpsampleConvLayer()
+def _padding (target_fw, padding, channels, h, w):
+    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS013:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_CPUWASM:
+        return ZeroPadding(padding, channels, h, w)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
+        return torch.nn.ZeroPad2d(padding)
+    
+    return torch.nn.ReflectionPad2d(padding)
 
 class TransformerNet_BaseOps(torch.nn.Module):
     def __init__(self, img_in, num_channels=32, target_framework=DEFAULT_ONNX_EXPORT_TARGET):

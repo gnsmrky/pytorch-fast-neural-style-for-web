@@ -11,8 +11,8 @@ With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/
    _**Update:** Posted the "`InstanceNormalization` missing" issue [here](https://github.com/Microsoft/onnxjs/issues/18)_.  
 _**Update:** `InstanceNormalization` is now supported in `master` branch by `cpu` and `wasm` backends (as of feb 15, 2019) with this [merged commit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590).  The commit should be made available in next stable ONNX.js release._  
 _**Update:** `InstanceNormalization` is supported in v0.1.4 `cpu` and `wasm` backend.  But 'wasm' backend has [issue #102](https://github.com/Microsoft/onnxjs/issues/102) about 'memory access out of bounds' error.  It's been_ fixed in [pull request #104](https://github.com/Microsoft/onnxjs/pull/104), so should be fixed in next release.
-2. `Pad` ONNX op support is missing in 'cpu' and 'wasm' backend.  To use the newly added `InstanceNormalization` in v0.1.4, had to manually implement `ZeroPad`.
-3. `Upsample` ONNX op support is missing.
+2. `Upsample` ONNX op support is missing.
+3. `Pad` ONNX op support is missing in 'cpu' and 'wasm' backend.  To use the newly added `InstanceNormalization` in v0.1.4, had to manually implement `ZeroPad`.
 
 ## Making PyTorch trained model work in ONNX.js
 One major technique is to minimize the changes in both PyTorch (source framework) and ONNX.js (target framework) as both frameworks are being updated frequently.  Particularly for ONNX.js as it is still in heavy development cycles.  _This is also true for any similar **conversion --> deployment** developments between 2 or more different frameworks._
@@ -33,9 +33,9 @@ Thus, the following directions were followed:
 
 ## A quick summary of ops between frameworks:  
 |PyTorch op (`torch.nn`) |Exported ONNX op<br/>(ONNXRuntime or WinML)|ONNX.js v0.1.3 op|ONNX.js v0.1.4 op|
-|:--:|:--:|:--:|:--:|:--:|
+|:--:|:--:|:--:|:--:|
 |`InstanceNorm2d`|`InstanceNormalization`| not supported | &nbsp; Only `cpu`&nbsp;backend  (`wasm`&nbsp;has&nbsp;[issue #102](https://github.com/Microsoft/onnxjs/issues/102)) |
-| `functional.interpolate` | `Upsample` | not supported | not supported ||
+| `functional.interpolate` | `Upsample` | not supported | not supported |
 | `ReflectionPad2d` | `Pad` | Only&nbsp;`webgl`&nbsp;backend |  Only&nbsp;`webgl`&nbsp;backend|
 
 
@@ -66,7 +66,7 @@ One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors b
    |Op graph| <a href="./imgs/upsample_baseops_01.png"><img src="./imgs/upsample_baseops_01.png" height="300"></a>  | <a href="./imgs/upsample_baseops_02.png"><img src="./imgs/upsample_baseops_02.png" height="300"></a>  | <a href="./imgs/upsample_baseops_03.png"><img src="./imgs/upsample_baseops_03.png" height="300"></a>  |
 
 ### Re-write `torch.nn.ReflectionPad2d` op using base ops
-   || Regular ONNX<br/><br/>| ONNX.js v0.1.3|ONNX.js v0.1.4)|ONNX.js v0.1.4|
+   || Regular ONNX<br/><br/>| ONNX.js v0.1.3|ONNX.js v0.1.4|ONNX.js v0.1.4|
    |:-:|:-:|:-:|:-:|:-:|
    |Runtime Backend|ONNXRuntime/WinML|`webgl`|`webgl`| `cpu`|
    |Op funtion|`Upsample` exported by `torch.nn.ReflectionPad2d()`|`Upsample` exported by `torch.nn.ReflectionPad2d()`|`Upsample` exported by `torch.nn.ReflectionPad2d()`|`ZeroPadding()` in `TransformerNet_BaseOps` class|
