@@ -5,8 +5,12 @@ Usually a deep learning framework comes with various examples.  Running examples
 
 Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as a quick demo with ONNX.js running on web browsers.
 
+#### Quick links:
+- [The problems](#the-problems)
+- [Making PyTorch trained model work in ONNX.js](#making-pytorch-trained-model-work-in-onnxjs)
+
 ## The problems
-With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3), there are few op support/compatibility problems.  While PyTorch exports a sub-set of ONNX ops, ONNX.js supports even fewer ops than PyTorch.
+With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3), there are few op support/compatibility problems.  While PyTorch exports a sub-set of ONNX ops, ONNX.js supports even fewer ops than PyTorch.  This results in a much smaller ONNX op set in ONNX.js.
 1. `InstanceNormalization` ONNX op support is missing.  
    _**Update:** Posted the "`InstanceNormalization` missing" issue [here](https://github.com/Microsoft/onnxjs/issues/18)_.  
 _**Update:** `InstanceNormalization` is now supported in `master` branch by `cpu` and `wasm` backends (as of feb 15, 2019) with this [merged commit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590).  The commit should be made available in next stable ONNX.js release._  
@@ -34,13 +38,27 @@ Thus, the following directions were followed:
 ## A quick summary of ops between frameworks:  
 |PyTorch op (`torch.nn`) |Exported ONNX op<br/>(ONNXRuntime or WinML)|ONNX.js v0.1.3 op|ONNX.js v0.1.4 op|
 |:--:|:--:|:--:|:--:|
-|`InstanceNorm2d`|`InstanceNormalization`| not supported | &nbsp; Only `cpu`&nbsp;backend  (`wasm`&nbsp;has&nbsp;[issue #102](https://github.com/Microsoft/onnxjs/issues/102)) |
+|`InstanceNorm2d`|`InstanceNormalization`| not supported | &nbsp; Only `cpu`&nbsp;backend <br/> (`wasm`&nbsp;has&nbsp;[issue #102](https://github.com/Microsoft/onnxjs/issues/102)) |
 | `functional.interpolate` | `Upsample` | not supported | not supported |
 | `ReflectionPad2d` | `Pad` | Only&nbsp;`webgl`&nbsp;backend |  Only&nbsp;`webgl`&nbsp;backend|
 
 
 ## Break down unsupported ops and layers
-The re-written model `TransformerNet_BaseOps` class in `transformer_net_baseops.py` replaces `InstanceNorm2d`, `interpolate` and `ReflectionPad2d` with basic ops.  The result is increased number of nodes in the graph.
+The re-written model `TransformerNet_BaseOps` class in `transformer_net_baseops.py` replaces `InstanceNorm2d`, `interpolate` and `ReflectionPad2d` with basic ops.  The model weights are still being trained by the  `TransformerNet` class in the original PyTorch FNS code base.  Just the model being exported is being re-written using `TransformerNet_BaseOps`.
+
+When exporting ONNX by doing inference run, add option `--target_framework` to target different ONNX.js versions.
+
+Example to export ONNX model file for ONNX.js 0.1.3:  
+<code>python neural_style/neural_style.py eval --content-scale 8.4375  --model saved_models/candy.pth --content-image images/content-images/amber.jpg --cuda 1 --output-image amber_candy_128x128.jpg --export_onnx saved_onnx/candy_128x128.onnx
+<b>--target_framework ONNXJS_013</b>  </code>
+
+Supported target frameworks:  
+- `ONNXJS`: Default, latest ONNX.js version using `webgl` backend.  
+- `ONNXJS_CPUWASM`: latest ONNX.js version using `cpu` backend.  
+- `ONNXJS_013`: ONNX.js v0.13 using `webgl` backend.  
+- `ONNXRT`: Original PyTorch ONNX export.
+- `PLAIDML`: Experimental PlaidML compatible ONNX model.  
+
 
 ### Re-write`torch.nn.InstanceNorm2d` op using base ops 
 In `TransformerNet`, `InstanceNorm2d` op is called for most `Conv2d` outputs, the number of ops increases quite a bit.  Here is the comparison of the converted `torch.nn.InstanceNorm2d`, before and after re-written in basic ops:
@@ -74,14 +92,21 @@ One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors b
    |Op graph|<a href="./imgs/pad_baseops_01.png"><img src="./imgs/pad_baseops_01.png" height='100'></a>|<a href="./imgs/pad_baseops_01.png"><img src="./imgs/pad_baseops_01.png" height='100'></a>|<a href="./imgs/pad_baseops_01.png" height='100'><img src="./imgs/pad_baseops_01.png" height='100'></a>|<a href="./imgs/pad_baseops_02.png"><img src="./imgs/pad_baseops_02.png" height='100'></a>|
 ## Before and after
 
-This is what it looks like in entirety.  
+This is what it looks like in entirety.  The more re-written ops results in increased number of ops in exported ONNX model file.
 <center>
 <table align="center">
    <th> &nbsp; </th>
-   <th> Regular </th>
+   <th> Regular ONNX</th>
    <th> ONNX.js v0.1.3 </th>
-   <th> ONNX.js v0.1.4<br/><code>webgl</code>&nbsp;backend</th>
-   <th> ONNX.js v0.1.4<br/><code>cpu</code>&nbsp;backend</th>
+   <th> ONNX.js v0.1.4</th>
+   <th> ONNX.js v0.1.4</th>
+   <tr>
+      <td align="center">Runtime Backend</td>
+      <td align="center">ONNXRuntime/WinML</td>
+      <td align="center"><code>webgl</code></td>
+      <td align="center"><code>webgl</code></td>
+      <td align="center"><code>cpu</code></td>
+   </tr>
    <tr>
       <td align="center">Number of ops</td>
       <td width="200" align="center">66</td>

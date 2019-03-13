@@ -1,7 +1,7 @@
 import torch
 
 # exports the original model, no workarounds.  The clean model.
-ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"       # default, exports the original PyTorch FNS model
+ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"       # exports the original PyTorch FNS model
 
 # targets ONNX.js v0.1.3
 #   exports the model with compatible 'InstanceNormalization' base ops and UpSampleBy2() (for interpolate) base ops that have issue #53 workaround.
