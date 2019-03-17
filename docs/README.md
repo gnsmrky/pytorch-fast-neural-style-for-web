@@ -35,8 +35,9 @@ Thus, the following directions were followed:
 3. **Break down the un-supported `InstanceNormalization`, `Upsample` and `Pad` ops to basic ops _only for inference eval_.**
    - The re-written network model `TransformerNet_BaseOps` is in `transformer_net_baseops.py`, _**only for inference eval**_.  
    - Rewrite using the basic ops and make sure the ops run correctly in ONNX.js.  
-      - PyTorch `torch.nn.InstanceNorm2d` layer class, normally converted to `InstanceNormalization` op in ONNX, is being re-written by `InstanceNorm2d_ONNXJS13()` class.  
-      - PyTorch `torch.nn.functional.interpolate()` function, normally converted to `Upsample` op in ONNX, is being re-written by `_upsample_by_2()`.
+      - PyTorch `torch.nn.InstanceNorm2d` layer class, normally converted to `InstanceNormalization` op in ONNX.  
+      - PyTorch `torch.nn.functional.interpolate()` function, normally converted to `Upsample` op in ONNX.
+      - PyTorch `ReflectionPad2d()` function, usually converted to `Pad` op in ONNX.
    - Optimize and debug the re-written ops so the performance is optimal when running in ONNX.js.  (Involves repeatitive tries with different supported ops and benchmark in ONNX.js.)
 3. **Make sure the pre-trained PyTorch weights and models (.pth files) can still be used.**
    - _So no re-training is needed!_
@@ -83,7 +84,7 @@ Similar goes for `interpolate()` being re-written by `_upsample_by_2()`.
 One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors by scale of 2 in both width (w) and height (h) using `nearest` method.  This can very easily be replaced be `reshape` and `concat` ops.
 
 
-   || Regular ONNX<br/><br/>| ONNX.js v0.1.3 <br/>(issue #53 workaround)|ONNX.js v0.1.4<br/>(issue #53 fixed)|
+   || Regular ONNX<br/><br/>| ONNX.js v0.1.3 <br/>(issue #53)|ONNX.js v0.1.4<br/>(issue #53 fixed)|
    |:-:|:-:|:-:|:-:|
    | Runtime Backend | ONNXRuntime/WinML | `webgl` |`webgl` `cpu`|
    |Op function| `Upsample` exported by `torch.nn.functional.interpolate()`|`upsample_by_2_ONNXJS013()` in `TransformerNet_BaseOps` class|`upsample_by_2()` in `TransformerNet_BaseOps` class|
@@ -109,10 +110,10 @@ Smaller number of ops is not the only factor to run inference faster.  Usually `
 <center>
 <table align="center">
    <th> &nbsp; </th>
-   <th> Regular ONNX</th>
-   <th> ONNX.js v0.1.3 </th>
-   <th> ONNX.js v0.1.4</th>
-   <th> ONNX.js v0.1.4</th>
+   <th> Regular ONNX<br/>&nbsp;<br/>&nbsp;</th>
+   <th> ONNX.js v0.1.3<br/>(issue #53)<br/>&nbsp; </th>
+   <th> ONNX.js v0.1.4<br/>(issue #53 fixed)<br/>&nbsp;</th>
+   <th> ONNX.js v0.1.4<br/>(issue #53 fixed)<br/>(Supports&nbsp;<code>InstanceNorm2d</code>)</th>
    <tr>
       <td align="center">Runtime Backend</td>
       <td align="center">ONNXRuntime/WinML</td>
