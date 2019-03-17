@@ -8,6 +8,11 @@ Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch
 #### Quick links:
 - [The problems](#the-problems)
 - [Making PyTorch trained model work in ONNX.js](#making-pytorch-trained-model-work-in-onnxjs)
+- [A quick summary of ops between frameworks](#a-quick-summary-of-ops-between-frameworks)
+- [Break down unsupported ops and layers](#Break-down-unsupported-ops-and-layers)
+- [Re-write `torch.nn.InstanceNorm2d` op using base ops](#Re-writetorch-nn-InstanceNorm2d-op-using-base-ops)
+- [Before and after](#Before-and-after)
+- [Make model files even smaller](#Make-model-files-even-smaller)
 
 ## The problems
 With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3), there are few op support/compatibility problems.  While PyTorch exports a sub-set of ONNX ops, ONNX.js supports even fewer ops than PyTorch.  This results in a much smaller ONNX op set in ONNX.js.
@@ -35,7 +40,7 @@ Thus, the following directions were followed:
    - _So no re-training is needed!_
    - The original `TransformerNet` network is still being used for training.  All training process reamins the same as the original repo.
 
-## A quick summary of ops between frameworks:  
+## A quick summary of ops between frameworks  
 |PyTorch op (`torch.nn`) |Exported ONNX op<br/>(ONNXRuntime or WinML)|ONNX.js v0.1.3 op|ONNX.js v0.1.4 op|
 |:--:|:--:|:--:|:--:|
 |`InstanceNorm2d`|`InstanceNormalization`| not supported | &nbsp; Only `cpu`&nbsp;backend <br/> (`wasm`&nbsp;has&nbsp;[issue #102](https://github.com/Microsoft/onnxjs/issues/102)) |
@@ -54,7 +59,7 @@ Example to export ONNX model file for ONNX.js 0.1.3:
 
 Supported target frameworks:  
 - `ONNXJS`: Default, latest ONNX.js version using `webgl` backend.  
-- `ONNXJS_CPUWASM`: latest ONNX.js version using `cpu` backend.  
+- `ONNXJS_CPU`: ONNX.js v0.1.4 and above using `cpu` backend.  
 - `ONNXJS_013`: ONNX.js v0.13 using `webgl` backend.  
 - `ONNXRT`: Original PyTorch ONNX export.
 - `PLAIDML`: Experimental PlaidML compatible ONNX model.  
@@ -165,13 +170,57 @@ Sub: <b>15</b></td>
 </table>
 </center>
 
-## Even smaller model sizes
-Training
-```
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e09 --save-model-dir saved_models --style-image images/style-images/candy.jpg
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models --style-image images/style-images/candy.jpg
+## Train reduced models for smaller model sizes
+Default start number of channels is `32` as in the original PyTorch `TransformerNet` class.  It is helpful to run the re-written `torch.nn.InstanceNorm2d` as ops like `add`, `div` and `mean` are element-wise operations.  Ops like `cat` is also memory consuming.  This results in increasing memory usage considerably.  
 
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e09 --save-model-dir saved_models --style-image images/style-images/mosaic.jpg
-python neural_style/neural_style.py train --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models --style-image images/style-images/mosaic.jpg
+By reducing the start number of channels to `16` reduces the model variables in the network to just about 1/4 of the original model size.  Set the start number of channels to `8` reduce it even further to 1/16.  In a resource constrained runtime environment like web browser, reduced model helps stability when running FNS inference.
 
-```
+The model can be re-trained with smaller start number of channels by specifying `--num-channels 16` when running training.  (Please refers to the original [PyTorch fast-neural-style exmaple](https://github.com/pytorch/examples/tree/master/fast_neural_style#usage) GitHub repo on how to setup the training.  This repo follows the same setup steps.)
+
+The `neural_style.py` in this repo has the following changes:
+
+1. Add support for `--num-channels` option.
+2. The result model file is automatically created and componsed of the following:
+   - Style picture name.
+   - `num-channels` number.
+   - `batch-size` number.
+   - `epocs` number.
+   - `content-weight` number.
+   - `style-weight` number.
+   - Example: for `Candy.jpg`, with `--num-channels 16`, `--batch-size 1`, `--epocs 2`, default `--content-weight` (`1e05`), default `--style weight` (`1e10`), the model file name is made automatically as:  
+      `candy_nc16_b1_e2_1e05_1e10.model`
+
+Here is a list of code snippets for training:
+<table>
+<th>Style file</th><th>Result model files<br/>auto saved in <code>saved_models_nc16</code> folder</th><th>Snippets for exporting ONNX model files <br/> (<code>saved_onnx_nc16</code> folder)</th>
+<tr>
+<td>candy.jpg</td>
+<td>candy_nc16_b1_e2_1e05_1e10.model</td>
+<td>python neural_style/neural_style.py train --dataset data/ <b>--batch-size 1</b> --epochs 2 --cuda 1  --style-image images/style-images/candy.jpg <b>--num-channels 16</b>  <b>--save-model-dir saved_models_nc16</b></td> 
+</tr>
+<tr>
+<td>mosaic.jpg</td>
+<td>mosaic_nc16_b1_e2_1e05_1e10.model</td>
+<td>python neural_style/neural_style.py train --dataset data/ <b>--batch-size 1</b> --epochs 2 --cuda 1  --style-image images/style-images/mosaic.jpg <b>--num-channels 16</b>  <b>--save-model-dir saved_models_nc16</b></td> 
+</tr>
+<tr>
+<td>rain-princess.jpg</td>
+<td>rain-princess_nc16_b1_e2_1e05_1e10.model</td>
+<td>python neural_style/neural_style.py train --dataset data/ <b>--batch-size 1</b> --epochs 2 --cuda 1  --style-image images/style-images/rain-princess.jpg <b>--num-channels 16</b>  <b>--save-model-dir saved_models_nc16</b></td> 
+</tr>
+<tr>
+<td>udnie.jpg</td>
+<td>udnie_nc16_b1_e2_1e05_1e10.model</td>
+<td>python neural_style/neural_style.py train --dataset data/ <b>--batch-size 1</b> --epochs 2 --cuda 1  --style-image images/style-images/udnie.jpg <b>--num-channels 16</b>  <b>--save-model-dir saved_models_nc16</b></td> 
+</tr>
+</table>
+
+
+Note:
+1. When using smaller `--num-channels` at `16`, `8`, or `4`, the number of trainable variable reduced signicantly.  It is recommended to set `--batch-size` to `1`, instead of the default value at `4`.
+2. Using nVidia GTX 1070, when `--batch-size 1` and `--epochs 2`, it takes approximately 4~5 hours for the training.
+3. The trained model files with `--num-channels 16` are provided in `saved_models_nc16` folder.
+4. The trained model files with `--num-channels 8` are provided in `saved_models_nc8` folder.
+5. When training with `--num-channels` equal or smaller than `8`, it is recommended to set the `--style-size` size to `2` for a smaller style image to learn from.
+
+

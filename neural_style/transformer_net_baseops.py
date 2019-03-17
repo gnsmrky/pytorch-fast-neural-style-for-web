@@ -11,7 +11,7 @@ ONNX_EXPORT_TARGET_ONNXJS013  = "ONNXJS_013"
 #   exports the model with compatible UpSampleBy2() (for interpolate) and 'ZeroPad' base ops ('cpu' and 'wasm' does not support 'Pad' op)
 #   bug: v0.1.4 'wasm' backend has "RuntimeError: memory access out of bounds" error, while 'cpu' backend runs good.
 #           the bug was posted to ONNX.js as issue #102: https://github.com/Microsoft/onnxjs/issues/102
-ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPUWASM"
+ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPU"
 
 # targets the latest ONNX.js for 'webgl' backend.
 #   for v0.1.4, same as v0.1.3 but with issue #53 fixed.
