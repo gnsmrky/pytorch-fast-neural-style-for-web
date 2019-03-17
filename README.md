@@ -107,7 +107,7 @@ With half the number of channels at 16, and similarly done so for all the follow
 
 The newly trained model files are provided in `saved_models_nc16` folder.  Specify `--num-channels 16` when running inference eval with reduced network model files.  The corresponding exported ONNX model files for 128x128 and 256x256 content image size are in `saved_onnx_nc16` folder.  (Due to fewer channels, the `--batch-size=1 (default is 4)` was used when doing training so style features are not batch normalized as much.)
 
-Also listed here is the model using `--num-channels 8`.
+Also listed here is the model using `--num-channels 8`, the result is still quite similar.  Yet the model size is reduced by ~16 times, or just ~6.25% of the original model!
 
 ### Model comparison:
 
@@ -124,7 +124,7 @@ Also listed here is the model using `--num-channels 8`.
 \*\*\* ONNX model file is a bit larger due to the network graph is also stored in the file.  
 
 ## Stylized image output with reduced model
-The results are shown in the following table.  The stylized image from reduced model is quite similar to the original model.  Yet the model size and total parameter count is reduced by ~75%.
+The results are shown in the following table.  The stylized image from reduced model with `--num-channels 16` is quite similar to the original model.  The model size and total parameter count is reduced by ~75%.  
 
 <div align='center'>
   <img src='images/content-images/amber.jpg' width="233px"><br/>
