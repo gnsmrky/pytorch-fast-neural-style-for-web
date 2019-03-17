@@ -10,9 +10,11 @@ Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch
 - [Making PyTorch trained model work in ONNX.js](#making-pytorch-trained-model-work-in-onnxjs)
 - [A quick summary of ops between frameworks](#a-quick-summary-of-ops-between-frameworks)
 - [Break down unsupported ops and layers](#Break-down-unsupported-ops-and-layers)
-- [Re-write `torch.nn.InstanceNorm2d` op using base ops](#Re-writetorch-nn-InstanceNorm2d-op-using-base-ops)
+   - [Re-write `torch.nn.InstanceNorm2d` op using base ops](#re-writetorchnninstancenorm2d-op-using-base-ops)
+   - [Re-write `torch.nn.functional.interpolate()` op using base ops](#re-writetorchnnfunctionalinterpolate-op-using-base-ops)
+   - [Re-write `torch.nn.ReflectionPad2d()` op using base ops](#re-write-torchnnreflectionpad2d-op-using-base-ops)
 - [Before and after](#Before-and-after)
-- [Make model files even smaller](#Make-model-files-even-smaller)
+- [Train reduced models for even smaller model sizes](#Train-reduced-models-for-even-smaller-model-sizes)
 
 ## The problems
 With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3), there are few op support/compatibility problems.  While PyTorch exports a sub-set of ONNX ops, ONNX.js supports even fewer ops than PyTorch.  This results in a much smaller ONNX op set in ONNX.js.
@@ -73,7 +75,7 @@ In `TransformerNet`, `InstanceNorm2d` op is called for most `Conv2d` outputs, th
 | Runtime Backend | ONNXRuntime/WinML | `webgl` |`webgl`|`cpu`<br/>(`wasm` still has issue) |
 | Layer Class |`IntanceNormalization` expoted by `torch.nn.InstanceNorm2d()`|`InstanceNorm2d_ONNXJS013()` in `TransformerNet_BaseOps` class|`InstanceNorm2d()` in `TransformerNet_BaseOps` class (No `Add` op) |`IntanceNormalization` expoted by `torch.nn.InstanceNorm2d()`|
 | Base Ops used | n/a | `reshape` `mean` `sqrt` `mul` `div` `add`  | `reshape` `mean` `sqrt` `mul` `div` | n/a |
-| Op graph| <img src="./imgs/instancenorm_baseops_01.png" height="500">  | <img src="./imgs/instancenorm_baseops_02.png" height="500">  | <img src="./imgs/instancenorm_baseops_03.png" height="500">  | <img src="./imgs/instancenorm_baseops_01.png" height="500"> |
+| Op graph| <a href="./imgs/instancenorm_baseops_01.png"><img src="./imgs/instancenorm_baseops_01.png" height="500"></a>  | <a href="./imgs/instancenorm_baseops_02.png"><img src="./imgs/instancenorm_baseops_02.png" height="500"></a>  | <a href="./imgs/instancenorm_baseops_03.png"><img src="./imgs/instancenorm_baseops_03.png" height="500"></a>  | <a href="./imgs/instancenorm_baseops_01.png"><img src="./imgs/instancenorm_baseops_01.png" height="500"></a> |
 
 ### Re-write`torch.nn.functional.interpolate()` op using base ops 
 Similar goes for `interpolate()` being re-written by `_upsample_by_2()`.  
@@ -89,6 +91,7 @@ One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors b
    |Op graph| <a href="./imgs/upsample_baseops_01.png"><img src="./imgs/upsample_baseops_01.png" height="300"></a>  | <a href="./imgs/upsample_baseops_02.png"><img src="./imgs/upsample_baseops_02.png" height="300"></a>  | <a href="./imgs/upsample_baseops_03.png"><img src="./imgs/upsample_baseops_03.png" height="300"></a>  |
 
 ### Re-write `torch.nn.ReflectionPad2d` op using base ops
+`Pad` op is not supported in `cpu` and `wasm` backend.  The `ZeroPad()` is being used to pad constant `0` instead.
    || Regular ONNX<br/><br/>| ONNX.js v0.1.3|ONNX.js v0.1.4|ONNX.js v0.1.4|
    |:-:|:-:|:-:|:-:|:-:|
    |Runtime Backend|ONNXRuntime/WinML|`webgl`|`webgl`| `cpu`|
@@ -170,8 +173,10 @@ Sub: <b>15</b></td>
 </table>
 </center>
 
-## Train reduced models for smaller model sizes
-Default start number of channels is `32` as in the original PyTorch `TransformerNet` class.  It is helpful to run the re-written `torch.nn.InstanceNorm2d` as ops like `add`, `div` and `mean` are element-wise operations.  Ops like `cat` is also memory consuming.  This results in increasing memory usage considerably.  
+## Train reduced models for even smaller model sizes
+Default start number of channels is `32` as in the original PyTorch `TransformerNet` class.  It then grows to `64` and `128` channels in `Conv2D` layers.  The `ResNet` layer followed, consisted 2 `Conv2D` each, also has `128` channels each.  
+
+`torch.nn.InstanceNorm2d` follows most `Conv2D` operations.  The re-written `torch.nn.InstanceNorm2d` has many element-wise operations, such as `add` and `mul` ops.  Ops like `cat` is also memory consuming.  This results in increasing memory usage considerably.  
 
 By reducing the start number of channels to `16` reduces the model variables in the network to just about 1/4 of the original model size.  Set the start number of channels to `8` reduce it even further to 1/16.  In a resource constrained runtime environment like web browser, reduced model helps stability when running FNS inference.
 
