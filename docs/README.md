@@ -92,12 +92,13 @@ One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors b
 
 ### Re-write `torch.nn.ReflectionPad2d` op using base ops
 `Pad` op is not supported in `cpu` and `wasm` backend.  The `ZeroPad()` is being used to pad constant `0` instead.
-   || Regular ONNX<br/><br/>| ONNX.js v0.1.3|ONNX.js v0.1.4|ONNX.js v0.1.4|
+   | | Regular ONNX<br/><br/>| ONNX.js v0.1.3|ONNX.js v0.1.4|ONNX.js v0.1.4|
    |:-:|:-:|:-:|:-:|:-:|
    |Runtime Backend|ONNXRuntime/WinML|`webgl`|`webgl`| `cpu`|
    |Op funtion|`Upsample` exported by `torch.nn.ReflectionPad2d()`|`Upsample` exported by `torch.nn.ReflectionPad2d()`|`Upsample` exported by `torch.nn.ReflectionPad2d()`|`ZeroPadding()` in `TransformerNet_BaseOps` class|
    |Base Ops used|n/a|n/a|n/a|`concat`|
    |Op graph|<a href="./imgs/pad_baseops_01.png"><img src="./imgs/pad_baseops_01.png" height='100'></a>|<a href="./imgs/pad_baseops_01.png"><img src="./imgs/pad_baseops_01.png" height='100'></a>|<a href="./imgs/pad_baseops_01.png" height='100'><img src="./imgs/pad_baseops_01.png" height='100'></a>|<a href="./imgs/pad_baseops_02.png"><img src="./imgs/pad_baseops_02.png" height='100'></a>|
+
 ## Before and after
 
 This is what it looks like in entirety.  The more re-written ops results in increased number of ops in exported ONNX model file.

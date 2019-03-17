@@ -13,7 +13,7 @@ This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) a
 #### Quick links:
 - Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as a quick demo with ONNX.js running on web browsers.
 
-- See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in more technical details.
+- See [Making the PyTorch to ONNX.js conversion work](#docs/readme.md) in `docs` folder if you are interested in more technical details.
 
 - [Setup and convert pre-trained PyTorch FNS model files](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx)
 
@@ -117,7 +117,7 @@ Also listed here is the model using `--num-channels 8`.
 |<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|1|1|
 |File&nbsp;size|~6.7MB|~1.7MB|~0.43MB|
 |# of params\*\*|~1.68M|~0.42M|~0.11M|
-|ONNX file size\*\*\*|~7MB|~2MB|~0.81MB|
+|Exported ONNX <br/>file size\*\*\*|~7MB|~2MB|~0.81MB|
 \* `--batch-size` is only used during training to reduce level of image feature normalization.  This option is _not_ required when running inference eval.  
 \*\* Use `model_count_params.py` to count parameters in PyTorch (`.pth` or `.model`) or ONNX (`.onnx`) model files.  
 \*\*\* ONNX model file is a bit larger due to the network graph is also stored in the file.  
@@ -141,7 +141,7 @@ The results are shown in the following table.  The stylized image from reduced m
     <td><img src='images/style-images/mosaic.jpg' width="300px"><br/><center>mosaic.jpg</center></td>
     <td><a href="images/output-images/amber-mosaic.jpg"><img src='images/output-images/amber-mosaic.jpg' width="300px"></a><br/>&nbsp;</td>
     <td><a href="images/output-images/amber-mosaic_nc16.jpg"><img src='images/output-images/amber-mosaic_nc16.jpg' width="300px"></a><br/>&nbsp;</td>
-    <td><a href="images/output-images/amber-mosaic_nc8.jpg"><img src='images/output-images/amber_mosaic_nc8.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-mosaic_nc8.jpg"><img src='images/output-images/amber-mosaic_nc8.jpg' width="300px"></a><br/>&nbsp;</td>
   </tr>
   <tr>
     <td><img src='images/style-images/candy.jpg' width="300px"><br/><center>candy.jpg</center></td>
