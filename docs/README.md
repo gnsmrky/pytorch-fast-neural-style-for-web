@@ -92,6 +92,7 @@ One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors b
 
 ### Re-write `torch.nn.ReflectionPad2d` op using base ops
 `Pad` op is not supported by ONNX.js `cpu` and `wasm` backend.  The `ZeroPad()` is being used to pad constant `0` instead.  
+
 | | Regular ONNX| ONNX.js v0.1.3|ONNX.js v0.1.4|ONNX.js v0.1.4|
 |:-:|:-:|:-:|:-:|:-:|
 |Runtime Backend|ONNXRuntime/WinML|`webgl`|`webgl`| `cpu`|
