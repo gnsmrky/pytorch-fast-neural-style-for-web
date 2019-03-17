@@ -112,7 +112,7 @@ Also listed here is the model using `--num-channels 8`.
 ### Model comparison:
 
 |&nbsp;|Original&nbsp;model<br/>(.pth)|Reduced&nbsp;model<br/>(.model)|Reduced&nbsp;model<br/>(.model)|
-|:-:|:-:|:-:|:-:|:-:|
+|:-:|:-:|:-:|:-:|
 |<code>&#x2011;&#x2011;num&#x2011;channels</code>|32|16|8|
 |<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|1|1|
 |File&nbsp;size|~6.7MB|~1.7MB|~0.43MB|
