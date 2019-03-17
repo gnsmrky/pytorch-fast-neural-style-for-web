@@ -21,7 +21,7 @@ With PyTorch v1.0 and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/
 1. `InstanceNormalization` ONNX op support is missing.  
    _**Update:** Posted the "`InstanceNormalization` missing" issue [here](https://github.com/Microsoft/onnxjs/issues/18)_.  
 _**Update:** `InstanceNormalization` is now supported in `master` branch by `cpu` and `wasm` backends (as of feb 15, 2019) with this [merged commit](https://github.com/Microsoft/onnxjs/pull/82#issuecomment-463867590).  The commit should be made available in next stable ONNX.js release._  
-_**Update:** `InstanceNormalization` is supported in v0.1.4 `cpu` and `wasm` backend.  But 'wasm' backend has [issue #102](https://github.com/Microsoft/onnxjs/issues/102) about 'memory access out of bounds' error.  It's been_ fixed in [pull request #104](https://github.com/Microsoft/onnxjs/pull/104), so should be fixed in next release.
+_**Update:** `InstanceNormalization` is supported in v0.1.4 `cpu` and `wasm` backend.  But `wasm` backend has [issue #102](https://github.com/Microsoft/onnxjs/issues/102) about 'memory access out of bounds' error.  It's been_ fixed in [pull request #104](https://github.com/Microsoft/onnxjs/pull/104), so should be fixed in next release.
 2. `Upsample` ONNX op support is missing.
 3. `Pad` ONNX op support is missing in 'cpu' and 'wasm' backend.  To use the newly added `InstanceNormalization` in v0.1.4, had to manually implement `ZeroPad`.
 
@@ -103,6 +103,9 @@ One note is that the `Upsample` used in PyTorch FNS is only up-scaling tensors b
 ## Before and after
 
 This is what it looks like in entirety.  The more re-written ops results in increased number of ops in exported ONNX model file.
+
+Smaller number of ops is not the only factor to run inference faster.  Usually `webgl` runs much faster than `cpu` and `wasm`.  Some times up to 10 times faster.  Thus, even with ~3 times more number of operators for `webgl`, it still runs much faster than `cpu` backend.  The only constrain for `webgl` is the much increased need for memory resource.  The more the number of ops usually means more memory resource.
+
 <center>
 <table align="center">
    <th> &nbsp; </th>
