@@ -203,7 +203,7 @@ The `neural_style.py` in this repo has the following changes:
 
 Here is a list of code snippets for training:
 <table>
-<th>Style file</th><th>Result model files<br/>auto saved in <code>saved_models_nc16</code> folder</th><th>Snippets for exporting ONNX model files <br/> (<code>saved_onnx_nc16</code> folder)</th>
+<th>Style file</th><th>Model files auto <br/>saved in <code>saved_models_nc16</code> folder</th><th>Snippets for exporting ONNX model files <br/> (<code>saved_onnx_nc16</code> folder)</th>
 <tr>
 <td>candy.jpg</td>
 <td>candy_nc16_b1_e2_1e05_1e10.model</td>
