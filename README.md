@@ -11,6 +11,9 @@ As both PyTorch and ONNX.js are being updated frequently, to minimize the scope 
 This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3)/[v0.1.4](https://github.com/Microsoft/onnxjs/tree/v0.1.4) running on Windows 10 or Ubuntu 18.04.
 
 #### Quick links:
+- Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as a quick demo with ONNX.js running on web browsers.
+
+- See [Making the PyTorch to ONNX.js conversion work](./docs) in `docs` folder if you are interested in more technical details.
 
 - [Setup and convert pre-trained PyTorch FNS model files](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx)
 
@@ -26,9 +29,6 @@ This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) a
 
 - [Python snippets - Export reduced model (.model) to ONNX (.onnx)](#python-snippets---export-reduced-model-model-to-onnx-onnx)
 
-- See [Making the PyTorch to ONNX.js conversion work](docs/readme.md) in `docs` folder if you are interested in more technical details.
-
-- Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as a quick demo with ONNX.js running on web browsers.
 
 ## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
@@ -107,21 +107,24 @@ With half the number of channels at 16, and similarly done so for all the follow
 
 The newly trained model files are provided in `saved_models_nc16` folder.  Specify `--num-channels 16` when running inference eval with reduced network model files.  The corresponding exported ONNX model files for 128x128 and 256x256 content image size are in `saved_onnx_nc16` folder.  (Due to fewer channels, the `--batch-size=1 (default is 4)` was used when doing training so style features are not batch normalized as much.)
 
+Also listed here is the model using `--num-channels 8`, the result is still quite similar.  Yet the model size is reduced by ~16 times, or just ~6.25% of the original model!
+
 ### Model comparison:
 
-|&nbsp;|Original&nbsp;model&nbsp;(.pth)|Converted&nbsp;ONNX|Reduced&nbsp;model&nbsp;(.model)|Reduced&nbsp;ONNX|
-|:-:|:-:|:-:|:-:|:-:|
-|<code>&#x2011;&#x2011;num&#x2011;channels</code>|32|32|16|16|
-|<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|4|1|1|
-|File&nbsp;size|~6.7MB|~7MB\*\*|~1.7MB|~2MB\*\*|
-|# of params\*\*\*|~1.68M|~1.68M|~0.42M|~0.42M|
+|&nbsp;|Original&nbsp;model<br/>(.pth)|Reduced&nbsp;model<br/>(.model)|Reduced&nbsp;model<br/>(.model)|
+|:-:|:-:|:-:|:-:|
+|<code>&#x2011;&#x2011;num&#x2011;channels</code>|32|16|8|
+|<code>&#x2011;&#x2011;batch&#x2011;size</code>\*|4|1|1|
+|File&nbsp;size|~6.7MB|~1.7MB|~0.43MB|
+|# of params\*\*|~1.68M|~0.42M|~0.11M|
+|Exported ONNX <br/>file size\*\*\*|~7MB|~2MB|~0.81MB|
 
 \* `--batch-size` is only used during training to reduce level of image feature normalization.  This option is _not_ required when running inference eval.  
-\*\* ONNX model file is a bit larger due to the network graph is also stored in the file.  
-\*\*\* Use `model_count_params.py` to count parameters in PyTorch (`.pth` or `.model`) or ONNX (`.onnx`) model files.
+\*\* Use `model_count_params.py` to count parameters in PyTorch (`.pth` or `.model`) or ONNX (`.onnx`) model files.  
+\*\*\* ONNX model file is a bit larger due to the network graph is also stored in the file.  
 
 ## Stylized image output with reduced model
-The results are shown in the following table.  The stylized image from reduced model is quite similar to the original model.  Yet the model size and total parameter count is reduced by ~75%.
+The results are shown in the following table.  The stylized image from reduced model with `--num-channels 16` is quite similar to the original model.  The model size and total parameter count is reduced by ~75%.  
 
 <div align='center'>
   <img src='images/content-images/amber.jpg' width="233px"><br/>
@@ -134,25 +137,30 @@ The results are shown in the following table.  The stylized image from reduced m
   <th>Style Image</th>
   <th>Original Model (.pth)<br/> <code>--num-channels=32</code><br/><code>--batch-size=4</code></th>
   <th>Reduced Model (.model)<br/> <code>--num-channels=16</code><br/><code>--batch-size=1</code></th>
+  <th>Reduced Model (.model)<br/> <code>--num-channels=8</code><br/><code>--batch-size=1</code></th>
   <tr>
-    <td><img src='images/style-images/mosaic.jpg' width="400px"><br/><center>mosaic.jpg</center></td>
-    <td><a href="images/output-images/amber-mosaic.jpg"><img src='images/output-images/amber-mosaic.jpg' width="400px"></a></td>
-    <td><a href="images/output-images/amber-mosaic_nc16.jpg"><img src='images/output-images/amber-mosaic_nc16.jpg' width="400px"></a></td>
+    <td><img src='images/style-images/mosaic.jpg' width="300px"><br/><center>mosaic.jpg</center></td>
+    <td><a href="images/output-images/amber-mosaic.jpg"><img src='images/output-images/amber-mosaic.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-mosaic_nc16.jpg"><img src='images/output-images/amber-mosaic_nc16.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-mosaic_nc8.jpg"><img src='images/output-images/amber-mosaic_nc8.jpg' width="300px"></a><br/>&nbsp;</td>
   </tr>
   <tr>
-    <td><img src='images/style-images/candy.jpg' width="400px"><br/><center>candy.jpg</center></td>
-    <td><a href="images/output-images/amber-candy.jpg"><img src='images/output-images/amber-candy.jpg' width="400px"></a></td>
-    <td><a href="images/output-images/amber-candy_nc16.jpg"><img src='images/output-images/amber-candy_nc16.jpg' width="400px"></a></td>
+    <td><img src='images/style-images/candy.jpg' width="300px"><br/><center>candy.jpg</center></td>
+    <td><a href="images/output-images/amber-candy.jpg"><img src='images/output-images/amber-candy.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-candy_nc16.jpg"><img src='images/output-images/amber-candy_nc16.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-candy_nc8.jpg"><img src='images/output-images/amber-candy_nc8.jpg' width="300px"></a><br/>&nbsp;</td>
   </tr>
   <tr>
-    <td><img src='images/style-images/rain-princess-cropped.jpg' width="400px"><br/><center>rain-princess-cropped.jpg</center></td>
-    <td><a href="images/output-images/amber-rain-princess.jpg"><img src='images/output-images/amber-rain-princess.jpg' width="400px"></a></td>
-    <td><a href="images/output-images/amber-rain-princess_nc16.jpg"><img src='images/output-images/amber-rain-princess_nc16.jpg' width="400px"></a></td>
+    <td><img src='images/style-images/rain-princess-cropped.jpg' width="300px"><br/><center>rain-princess-cropped.jpg</center></td>
+    <td><a href="images/output-images/amber-rain-princess.jpg"><img src='images/output-images/amber-rain-princess.jpg' width="300px"></a><br/>&nbsp;<br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-rain-princess_nc16.jpg"><img src='images/output-images/amber-rain-princess_nc16.jpg' width="300px"></a><br/>&nbsp;<br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-rain-princess_nc8.jpg"><img src='images/output-images/amber-rain-princess_nc8.jpg' width="300px"></a><br/>&nbsp;<br/>&nbsp;</td>
   </tr>
   <tr>
-    <td><img src='images/style-images/udnie.jpg' width="400px"><br/><center>udnie.jpg</center></td>
-    <td><a href="images/output-images/amber-udnie.jpg"><img src='images/output-images/amber-udnie.jpg' width="400px"></a></td>
-    <td><a href="images/output-images/amber-udnie_nc16.jpg"><img src='images/output-images/amber-udnie_nc16.jpg' width="400px"></a></td>
+    <td><img src='images/style-images/udnie.jpg' width="300px"><br/><center>udnie.jpg</center></td>
+    <td><a href="images/output-images/amber-udnie.jpg"><img src='images/output-images/amber-udnie.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-udnie_nc16.jpg"><img src='images/output-images/amber-udnie_nc16.jpg' width="300px"></a><br/>&nbsp;</td>
+    <td><a href="images/output-images/amber-udnie_nc8.jpg"><img src='images/output-images/amber-udnie_nc8.jpg' width="300px"></a><br/>&nbsp;</td>
   </tr>
 </table>
 </div>

@@ -1,7 +1,7 @@
 import torch
 
 # exports the original model, no workarounds.  The clean model.
-ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"       # default, exports the original PyTorch FNS model
+ONNX_EXPORT_TARGET_ONNXRT  = "ONNXRT"       # exports the original PyTorch FNS model
 
 # targets ONNX.js v0.1.3
 #   exports the model with compatible 'InstanceNormalization' base ops and UpSampleBy2() (for interpolate) base ops that have issue #53 workaround.
@@ -11,7 +11,7 @@ ONNX_EXPORT_TARGET_ONNXJS013  = "ONNXJS_013"
 #   exports the model with compatible UpSampleBy2() (for interpolate) and 'ZeroPad' base ops ('cpu' and 'wasm' does not support 'Pad' op)
 #   bug: v0.1.4 'wasm' backend has "RuntimeError: memory access out of bounds" error, while 'cpu' backend runs good.
 #           the bug was posted to ONNX.js as issue #102: https://github.com/Microsoft/onnxjs/issues/102
-ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPUWASM"
+ONNX_EXPORT_TARGET_ONNXJS_CPUWASM  = "ONNXJS_CPU"
 
 # targets the latest ONNX.js for 'webgl' backend.
 #   for v0.1.4, same as v0.1.3 but with issue #53 fixed.
@@ -46,25 +46,6 @@ def _instance_norm (target_fw):
     return ins_norm
 
 # functional layer used in UpsampleConvLayer()
-def _padding (target_fw, padding, channels, h, w):
-    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
-        return torch.nn.ReflectionPad2d(padding)
-
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS013:
-        return torch.nn.ReflectionPad2d(padding)
-
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_CPUWASM:
-        return ZeroPadding(padding, channels, h, w)
-
-    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
-        return torch.nn.ReflectionPad2d(padding)
-
-    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
-        return torch.nn.ZeroPad2d(padding)
-    
-    return torch.nn.ReflectionPad2d(padding)
-
-# functional layer used in UpsampleConvLayer()
 def _upsample_by_2 (target_fw, x, c, h, w):
     if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
         return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=2)
@@ -82,6 +63,25 @@ def _upsample_by_2 (target_fw, x, c, h, w):
         return upsample_by_2(x, c, h, w)
     
     return torch.nn.functional.interpolate(x, mode='nearest', scale_factor=self.upsample)
+
+# functional layer used in UpsampleConvLayer()
+def _padding (target_fw, padding, channels, h, w):
+    if target_fw == ONNX_EXPORT_TARGET_ONNXRT:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS013:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS_CPUWASM:
+        return ZeroPadding(padding, channels, h, w)
+
+    elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
+        return torch.nn.ReflectionPad2d(padding)
+
+    elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
+        return torch.nn.ZeroPad2d(padding)
+    
+    return torch.nn.ReflectionPad2d(padding)
 
 class TransformerNet_BaseOps(torch.nn.Module):
     def __init__(self, img_in, num_channels=32, target_framework=DEFAULT_ONNX_EXPORT_TARGET):
