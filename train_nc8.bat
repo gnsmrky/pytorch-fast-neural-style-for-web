@@ -1,0 +1,4 @@
+python neural_style/neural_style.py train --batch-size 1 --num-channels 8 --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models_nc8 --style-image images/style-images/candy.jpg
+python neural_style/neural_style.py train --batch-size 1 --num-channels 8 --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models_nc8 --style-image images/style-images/mosaic.jpg
+python neural_style/neural_style.py train --batch-size 1 --num-channels 8 --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models_nc8 --style-image images/style-images/rain-princess.jpg
+python neural_style/neural_style.py train --batch-size 1 --num-channels 8 --dataset data/ --epochs 2 --cuda 1 --content-weight 1e5 --style-weight 1e10 --save-model-dir saved_models_nc8 --style-image images/style-images/udnie.jpg
