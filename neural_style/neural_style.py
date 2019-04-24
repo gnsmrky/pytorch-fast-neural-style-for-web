@@ -17,6 +17,10 @@ from transformer_net import TransformerNet
 from transformer_net_baseops import TransformerNet_BaseOps # base ops version of TransformerNet
 from vgg import Vgg16
 
+# test for InstanceNorm2d
+from transformer_net_baseops import InstanceNorm2d # base ops version of InstanceNorm2d
+from transformer_net_baseops import ConvLayer # base ops version of ConvLayer
+
 
 def check_paths(args):
     try:
@@ -134,6 +138,26 @@ def train(args):
     print("\nDone, trained model saved at", save_model_path)
 
 
+class TestNet(torch.nn.Module):
+    def __init__(self, img_in, num_channels=8, target_framework="ONNXJS"):
+        super(TestNet, self).__init__()
+
+        img_h = img_in.shape[2]
+        img_w = img_in.shape[3]
+
+        self.conv = ConvLayer(img_h, img_w, 3, num_channels, kernel_size=3, stride=1, target_fw=target_framework)
+        self.ins  = InstanceNorm2d(num_channels, affine=True)
+
+        # init weight & bias
+        self.conv.conv2d.weight.data.fill_(1.0)
+        self.conv.conv2d.bias.data.fill_(1.0)
+
+    def forward (self, X):
+        #y = self.ins(self.conv(X))
+        y = self.conv(X)
+
+        return y
+
 def stylize(args):
     device = torch.device("cuda" if args.cuda else "cpu")
 
@@ -142,8 +166,12 @@ def stylize(args):
         transforms.ToTensor(),
         transforms.Lambda(lambda x: x.mul(255))
     ])
+    #print ("content_image0:{}".format(content_image))
+
     content_image = content_transform(content_image)
     content_image = content_image.unsqueeze(0).to(device)
+
+    #print ("content_image1:{}".format(content_image))
 
     if args.model.endswith(".onnx"):
         output = stylize_onnx_caffe2(content_image, args)
@@ -167,6 +195,29 @@ def stylize(args):
             if args.export_onnx:
                 assert args.export_onnx.endswith(".onnx"), "Export model file should end with .onnx"
                 output = torch.onnx._export(style_model, content_image, args.export_onnx).cpu()
+
+                '''
+                # the code to test ops for android.  ReflectionPad2d --> 'Pad' with reflection does not work on Android.  
+                n=3
+                h=128
+                w=128
+
+                img = [(i%256)/255.0 for i in range(1*n*h*w)]
+                input = torch.Tensor(img).view(1,n,h,w)
+
+                #input = torch.empty(1, n, h, w).uniform_(0, 255)
+                print ("input:{}".format(input))
+                net = TestNet(input)
+
+                torch.onnx._export(net, input, args.export_onnx).cpu()
+
+                output = net(input)
+                print("output:{}".format(output))
+
+                #X = torch.nn.InstanceNorm2d(n)
+                #b_out=X(a_tensor)
+                #print(b_out)
+                '''
             else:
                 output = style_model(content_image).cpu()
     utils.save_image(args.output_image, output[0])

@@ -76,7 +76,8 @@ def _padding (target_fw, padding, channels, h, w):
         return ZeroPadding(padding, channels, h, w)
 
     elif target_fw == ONNX_EXPORT_TARGET_ONNXJS:
-        return torch.nn.ReflectionPad2d(padding)
+        #return torch.nn.ReflectionPad2d(padding)  # bug: reflection pad does not work on Android...
+        return torch.nn.ZeroPad2d(padding)
 
     elif target_fw == ONNX_EXPORT_TARGET_PLAIDML:
         return torch.nn.ZeroPad2d(padding)
@@ -194,6 +195,7 @@ class ZeroPadding(torch.nn.Module):
         return n
 
 # regular instance norm using base ops 
+import numpy as np
 class InstanceNorm2d(torch.nn.Module):
     def __init__(self, num_features, eps=1e-05, momentum=0.1, affine=False, track_running_stats=False):
         super(InstanceNorm2d, self).__init__()
@@ -207,10 +209,11 @@ class InstanceNorm2d(torch.nn.Module):
 
     def forward(self,x):
         num_features = self.num_features
-
+        
         mu   = x.view(1,num_features,1,-1).mean(3,keepdim=True)  # mean
-
         diff = x - mu
+        var = diff*diff
+
         var  = (diff*diff).view(1,num_features,1,-1).mean(3,keepdim=True)  # variance
         norm = (diff)/((var + self.epsilon).sqrt())  # instance norm
 
