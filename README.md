@@ -8,7 +8,7 @@ It goes like this:
 
 As both PyTorch and ONNX.js are being updated frequently, to minimize the scope of change, _most changes happens in this fork of fast-neural-style example only_.
 
-This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3)/[v0.1.4](https://github.com/Microsoft/onnxjs/tree/v0.1.4) running on Windows 10 or Ubuntu 18.04.
+This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) and [ONNX.js v0.1.3](https://github.com/Microsoft/onnxjs/tree/v0.1.3)/[v0.1.4](https://github.com/Microsoft/onnxjs/tree/v0.1.4)/[v0.1.5](https://github.com/Microsoft/onnxjs/tree/v0.1.5) running on Windows 10 or Ubuntu 18.04.
 
 #### Quick links:
 - Goto [PyTorch fast-neural-style](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/) for a quick working web style transfer using ONNX.js.
@@ -16,7 +16,7 @@ This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) a
 
 - See [Making the PyTorch to ONNX.js conversion work](./docs) in `docs` folder if you are interested in more technical details.
 
-- [Setup and convert pre-trained PyTorch FNS model files](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx)
+- [Setup and convert pre-trained PyTorch FNS model files for web inference](#setup-and-convert-pre-trained-pytorch-fns-model-files-pth-to-onnx-onnx-for-web-inference)
 
 - [System resource considerations](#system-resource-considerations)
 
@@ -31,7 +31,7 @@ This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) a
 - [Python snippets - Export reduced model (.model) to ONNX (.onnx)](#python-snippets---export-reduced-model-model-to-onnx-onnx)
 
 
-## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx)
+## Setup and convert pre-trained PyTorch FNS model files (.pth) to ONNX (.onnx) for web inference
 1. Setup PyTorch - Follow the instructions at [PyTorch get started](https://pytorch.org/get-started/locally/) page:
    - Set up CUDA if necessary.  (If only CPU is desired, install PyTorch 1.0 for CPU.)
    - This repo is based on PyTorch v1.0 `pip` installation with Python 3.6.
@@ -74,7 +74,7 @@ This repo is based on [PyTorch v1.0](https://pytorch.org/get-started/locally/) a
    - With CPU: specify `--cuda 0` in the above python command line.
    - The output image `amber_mosaic.jpg` is created.
 
-The generated `mosaic.onnx` model file can then be inferenced by ONNX.js in supported web browsers.  However, the `.onnx` model file may be too large to run in web browsers.  Read on for additional works to make it runnable in web browsers.
+_The exported `mosaic.onnx` model file can then be inferenced by ONNX.js in supported web browsers.  However, the `.onnx` model file may be too large to run in web browsers.  Read on for additional works to make it runnable in web browsers.
 
 ## System resource considerations
 When running PyTorch inference eval on a memory resource limited systems, such as CPU + 8GB of RAM (i.e. Intel HD Graphics 520) or GPU + 2GB VRAM (i.e. nVidia MX150), the eval may result in **`Segmentation fault (core dumped)`** error.  This is mainly due to insufficient memory when doing inference run.  PyTorch needs to run inference to build model graph.  One quick way around this is to reduce the content image size by specifying `--content-scale`.  Specify `--content-scale 2` would resize the content image to half for both width and height.  
@@ -87,6 +87,8 @@ python neural_style/neural_style.py eval --model saved_models/mosaic.pth --conte
 (Reduced content size does not create smaller `.onnx` model file.  It simply reduces the amount of resources needed for the needed inference run.  In the exported `.onnx` model files, only the sizes of input and output nodes are changed.)
 
 ## Smaller input image sizes for ONNX.js web inference
+In a resource constrained syste, such as on Intel integrated graphics and smartphones, the browser can easily run out of resource for a relatively large network like fast neural style transfer.  The easiest way to workaround this is to downsize the input image dimension.
+
 Goto [PyTorch fast-neural-style web benchmark](https://gnsmrky.github.io/pytorch-fast-neural-style-onnxjs/benchmark.html) as an example for quick demo.  The benchmark runs image sizes at 128x128 and 256x256 to avoid the constrained resource situation.
 
 When doing inference eval with ONNX.js, the available resource is even more limited in web browsers.  It is recommended to lower down the content image size even futher to 128x128 and 256x256 using `--content-scale` option.
@@ -108,7 +110,9 @@ With half the number of channels at 16, and similarly done so for all the follow
 
 The newly trained model files are provided in `saved_models_nc16` folder.  Specify `--num-channels 16` when running inference eval with reduced network model files.  The corresponding exported ONNX model files for 128x128 and 256x256 content image size are in `saved_onnx_nc16` folder.  (Due to fewer channels, the `--batch-size=1 (default is 4)` was used when doing training so style features are not batch normalized as much.)
 
-Also listed here is the model using `--num-channels 8`, the result is still quite similar.  Yet the model size is reduced by ~16 times, or just ~6.25% of the original model!
+Also listed here is the model using `--num-channels 8`, the result is *still* quite similar.  Yet the model size is reduced by ~16 times, or just ~6.25% of the original model!
+
+###### Note: One caveat for reduced model is that the network has much fewer parameters to "remember" features.  Thus for a much larger image, say, at 512x512 and above, the stylization can be severely degraded.  For web inference samples given here, output images are releatively small at 128x128 or 256x256.  Reduced model is therefore suitable.
 
 ### Model comparison:
 
